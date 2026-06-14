@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARK Dominios Shop</title>
+    <style>
+        :root {
+            --bg-main: #070a13;
+            --bg-card: #111927;
+            --bg-hover: #1c283c;
+            --accent: #38bdf8;
+            --accent-hover: #0ea5e9;
+            --vip-color: #fbbf24;
+            --vip-bg: rgba(251, 191, 36, 0.08);
+            --text-main: #f8fafc;
+            --text-muted: #4b5563;
+            --text-secondary: #9ca3af;
+            --success: #10b981;
+            --border: #1f2937;
+            --fav-color: #ef4444;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body { 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+            background-color: var(--bg-main); 
+            color: var(--text-main); 
+            padding: 20px;
+            overflow-y: scroll;
+        }
+
+        /* Responsive Dual-Column Split */
+        .layout-container {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 25px;
+            max-width: 1450px;
+            margin: auto;
+        }
+
+        /* --- STICKY APP FILTER CONTROLS HEADER --- */
+        .sticky-header-container {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--bg-main);
+            padding-bottom: 15px;
+        }
+
+        .header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            background: var(--bg-card);
+            padding: 15px 25px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        h1 { 
+            color: var(--accent); 
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .header-toggles {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        /* General Badge Toggle Switches */
+        .toggle-capsule {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s ease;
+            border: 1px solid var(--border);
+        }
+
+        .toggle-vip { background: var(--vip-bg); color: var(--vip-color); border-color: rgba(251, 191, 36, 0.2); }
+        .toggle-fav { background: rgba(239, 68, 68, 0.05); color: #f87171; border-color: rgba(239, 68, 68, 0.15); }
+
+        .switch { position: relative; display: inline-block; width: 34px; height: 18px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #374151; transition: .2s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 12px; width: 12px; left: 3px; bottom: 3px; background-color: white; transition: .2s; border-radius: 50%; }
+        
+        input:checked + .slider { background-color: currentColor; }
+        input:checked + .slider:before { transform: translateX(16px); }
+
+        /* Integrated Search controls wrapper */
+        .controls-grid { 
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr auto;
+            gap: 12px;
+            background: var(--bg-card);
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .search-box-wrapper { position: relative; display: flex; align-items: center; }
+        .search-box-wrapper input { width: 100%; padding-right: 40px; }
+
+        .clear-search-btn {
+            position: absolute; right: 12px;
+            background: transparent; border: none;
+            color: var(--text-secondary); font-size: 1.2rem;
+            cursor: pointer; display: none;
+        }
+
+        input[type="text"], select { 
+            padding: 10px 14px; 
+            border: 1px solid var(--border); 
+            border-radius: 8px; 
+            font-size: 14px; 
+            background: #090e1a; 
+            color: var(--text-main); 
+            transition: all 0.2s;
+        }
+
+        input[type="text"]:focus, select:focus { 
+            outline: none; border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+        }
+
+        .btn-reset {
+            background: #1f2937;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0 16px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .btn-reset:hover { background: #374151; color: white; }
+
+        /* Live Tracker Metrics Bar */
+        .summary-bar {
+            background: #090e1a;
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+        .summary-bar span { color: var(--text-main); font-weight: 700; }
+
+        /* Main Structured Table Frame */
+        .table-wrapper {
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: 0 4px 25px rgba(0,0,0,0.3);
+        }
+
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th, td { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+
+        th { 
+            background-color: #0d131f; 
+            color: var(--text-secondary); 
+            font-weight: 600; 
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.06em;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.15s;
+        }
+        th:hover { background-color: var(--bg-hover); color: var(--text-main); }
+        th.sort-active { color: var(--accent); }
+
+        tbody tr { transition: background-color 0.1s; }
+        tbody tr:hover { background-color: var(--bg-hover); }
+        
+        .row-vip { background: rgba(251, 191, 36, 0.005); }
+
+        /* Copy Buttons CSS Components */
+        .cmd-badge { 
+            display: inline-flex;
+            align-items: center;
+            font-family: 'Fira Code', monospace; 
+            color: var(--accent); 
+            background: rgba(56, 189, 248, 0.06); 
+            padding: 5px 10px; border-radius: 6px; 
+            border: 1px solid rgba(56, 189, 248, 0.12);
+            cursor: pointer; transition: all 0.15s;
+            position: relative; font-weight: 700; font-size: 0.85rem;
+        }
+        .cmd-badge:hover { background: rgba(56, 189, 248, 0.15); transform: translateY(-1px); }
+        .cmd-badge.is-vip-cmd { color: var(--vip-color); background: rgba(251, 191, 36, 0.05); border-color: rgba(251, 191, 36, 0.15); }
+        .cmd-badge.is-vip-cmd:hover { background: rgba(251, 191, 36, 0.12); }
+
+        /* Favorite Action Star */
+        .btn-fav-star {
+            background: transparent; border: none;
+            font-size: 1.1rem; color: #374151;
+            cursor: pointer; transition: transform 0.1s;
+            padding: 0 4px;
+        }
+        .btn-fav-star:hover { transform: scale(1.2); }
+        .btn-fav-star.is-fav { color: #f87171 !important; }
+
+        .add-cart-btn {
+            background: #1f2937; color: var(--text-main);
+            border: 1px solid var(--border); border-radius: 6px;
+            width: 30px; height: 30px; font-size: 1rem;
+            cursor: pointer; display: inline-flex;
+            align-items: center; justify-content: center; font-weight: bold;
+            transition: all 0.15s;
+        }
+        .add-cart-btn:hover { background: var(--success); border-color: var(--success); color: white; }
+
+        .price { font-weight: 700; color: var(--success); font-size: 0.95rem; }
+
+        /* Categorization Styling tags */
+        .category-container { display: flex; gap: 4px; flex-wrap: wrap; }
+        .cat-badge { 
+            padding: 2px 6px; border-radius: 20px; 
+            font-size: 0.65rem; font-weight: 700;
+            text-transform: uppercase; color: #fff;
+        }
+        
+        .cat-dinosaurios { background: rgba(34, 197, 94, 0.12); color: #4ade80; }
+        .cat-recursos { background: rgba(120, 113, 108, 0.12); color: #a8a29e; }
+        .cat-consumibles { background: rgba(236, 72, 153, 0.12); color: #f472b6; }
+        .cat-agricultura { background: rgba(132, 204, 22, 0.12); color: #a3e635; }
+        .cat-estructuras { background: rgba(59, 130, 246, 0.12); color: #60a5fa; }
+        .cat-skins { background: rgba(168, 85, 247, 0.12); color: #c084fc; }
+        .cat-armaduras { background: rgba(6, 182, 212, 0.12); color: #2dd4bf; }
+        .cat-armas { background: rgba(239, 68, 142, 0.12); color: #f87171; }
+        .cat-municion { background: rgba(185, 28, 28, 0.12); color: #f87171; }
+        .cat-artefactos { background: rgba(245, 158, 11, 0.12); color: #fbbf24; }
+        .cat-extras { background: rgba(20, 184, 166, 0.12); color: #2dd4bf; }
+        .cat-monturas { background: rgba(249, 115, 22, 0.12); color: #fb923c; }
+        .cat-vehiculos { background: rgba(99, 102, 241, 0.12); color: #818cf8; }
+        .cat-kits { background: rgba(217, 70, 239, 0.12); color: #e879f9; }
+        .cat-otros { background: rgba(100, 116, 139, 0.12); color: #94a3b8; }
+
+        .vip-tag {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: #451a03; padding: 1px 4px; border-radius: 4px;
+            font-size: 0.6rem; font-weight: 800; margin-left: 5px;
+        }
+
+        /* --- STICKY CALCULATOR PANEL COMPONENT --- */
+        .cart-sidebar {
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            padding: 20px; height: fit-content;
+            position: sticky; top: 20px;
+            display: flex; flex-direction: column;
+            box-shadow: 0 4px 25px rgba(0,0,0,0.3);
+        }
+
+        .cart-title {
+            font-size: 1.15rem; font-weight: 700; color: var(--accent);
+            margin-bottom: 15px; display: flex; justify-content: space-between;
+            align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px;
+        }
+
+        .cart-items-list { max-height: 380px; overflow-y: auto; margin-bottom: 15px; padding-right: 4px; }
+
+        .cart-item {
+            background: #090e1a; border: 1px solid var(--border);
+            border-radius: 8px; padding: 10px; margin-bottom: 8px;
+            display: flex; flex-direction: column; gap: 6px;
+        }
+
+        .cart-item-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .cart-item-name { font-weight: 600; font-size: 0.85rem; color: var(--text-main); flex: 1; padding-right: 8px; }
+        .cart-item-price { color: var(--success); font-size: 0.85rem; font-weight: 700; }
+
+        .cart-item-controls-row {
+            display: flex; justify-content: space-between; align-items: center;
+            border-top: 1px solid #1f2937; padding-top: 6px;
+        }
+
+        .cart-cmd-btn {
+            background: rgba(56, 189, 248, 0.08); color: var(--accent);
+            border: 1px solid rgba(56, 189, 248, 0.15); padding: 3px 6px;
+            border-radius: 4px; font-family: 'Fira Code', monospace; font-size: 0.7rem;
+            cursor: pointer; display: flex; align-items: center; gap: 3px; transition: all 0.2s;
+        }
+        .cart-cmd-btn:hover { background: rgba(56, 189, 248, 0.18); }
+        .cart-cmd-btn.is-vip { color: var(--vip-color); background: rgba(251, 191, 36, 0.06); border-color: rgba(251, 191, 36, 0.15); }
+
+        .cart-qty-controls { display: flex; align-items: center; gap: 6px; }
+        .cart-qty-btn {
+            background: #1f2937; border: 1px solid var(--border); color: var(--text-main);
+            width: 22px; height: 22px; border-radius: 4px; cursor: pointer;
+            font-size: 0.85rem; display: inline-flex; align-items: center; justify-content: center;
+        }
+        .cart-qty-btn:hover { background: var(--bg-hover); border-color: var(--accent); }
+
+        .cart-total-section { border-top: 1px solid var(--border); padding-top: 12px; margin-bottom: 12px; }
+        .cart-total-row { display: flex; justify-content: space-between; font-weight: 700; font-size: 1.05rem; margin-bottom: 12px; }
+
+        .cart-actions { display: flex; flex-direction: column; gap: 8px; }
+        .btn-action-share {
+            background: var(--accent); color: #000; border: none;
+            padding: 10px; border-radius: 6px; font-weight: 700;
+            cursor: pointer; font-size: 0.85rem; text-align: center; transition: all 0.2s;
+        }
+        .btn-action-share:hover { background: var(--accent-hover); }
+
+        /* --- MOBILE FLOATING ACTION COMPONENT --- */
+        .mobile-cart-fab {
+            position: fixed; bottom: 20px; right: 20px;
+            width: 56px; height: 56px; border-radius: 50%;
+            background: var(--accent); color: #000;
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.4);
+            display: none; align-items: center; justify-content: center;
+            font-size: 1.4rem; cursor: pointer; z-index: 1001;
+            transition: transform 0.2s;
+        }
+        .mobile-cart-fab:active { transform: scale(0.9); }
+        .mobile-cart-fab-badge {
+            position: absolute; top: -2px; right: -2px;
+            background: #f87171; color: white; border-radius: 50%;
+            min-width: 20px; height: 20px; padding: 2px;
+            font-size: 0.7rem; font-weight: 800; display: flex; align-items: center; justify-content: center;
+        }
+
+        .mobile-cart-close { display: none; background: transparent; border: none; color: white; font-size: 1.4rem; cursor: pointer; }
+
+        /* --- ADVANCED ENTERPRISE RESPONSIVE MEDIA BREAKPOINTS --- */
+        @media (max-width: 1024px) {
+            .layout-container { grid-template-columns: 1fr; }
+            
+            /* Morph Cart Sidebar into Bottom Sheet Overlay */
+            .cart-sidebar {
+                position: fixed; top: 0; right: -100%;
+                width: 100%; max-width: 350px; height: 100vh;
+                z-index: 2000; transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                border-radius: 12px 0 0 12px; border-y: none;
+            }
+            .cart-sidebar.open { right: 0; }
+            .mobile-cart-fab { display: flex; }
+            .mobile-cart-close { display: block; }
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 8px; }
+            .sticky-header-container { top: 0; padding-bottom: 8px; }
+            .header-section { flex-direction: column; gap: 10px; padding: 12px; text-align: center; }
+            .controls-grid { grid-template-columns: 1fr; gap: 8px; padding: 10px; }
+            .summary-bar { flex-direction: column; gap: 6px; text-align: center; font-size: 0.8rem; }
+            
+            /* Optimized Micro-Cards Layout */
+            table, thead, tbody, th, td, tr { display: block; width: 100%; }
+            thead { display: none; }
+            .table-wrapper { background: transparent; border: none; }
+            
+            tbody tr {
+                background: var(--bg-card); border: 1px solid var(--border);
+                border-radius: 10px; margin-bottom: 8px; padding: 12px;
+                display: grid; grid-template-columns: 1fr auto;
+                grid-template-areas: 
+                    "cats fav"
+                    "name name"
+                    "cmd cmd"
+                    "price cart";
+                gap: 6px; align-items: center;
+            }
+
+            td { padding: 0; border: none; font-size: 0.9rem; display: flex; }
+            td:nth-child(1) { grid-area: cats; }
+            td:nth-child(2) { grid-area: cmd; }
+            td:nth-child(3) { grid-area: name; font-size: 0.95rem; }
+            td:nth-child(4) { display: none; } /* Drop static qty column */
+            td:nth-child(5) { grid-area: price; font-size: 1.05rem; }
+            td:nth-child(6) { grid-area: cart; justify-content: flex-end; }
+            
+            /* Re-purpose quantity inside name space smoothly */
+            td:nth-child(3)::after { content: " (" attr(data-qty) ")"; color: var(--text-secondary); font-size: 0.85rem; font-weight: normal; }
+            
+            /* Custom Placement of absolute elements inside the layout cell structure */
+            tbody tr { position: relative; }
+            .mobile-fav-anchor { position: absolute; top: 12px; right: 12px; grid-area: fav; display: flex; justify-content: flex-end; }
+            
+            .cmd-badge { width: 100%; justify-content: center; padding: 8px; font-size: 0.95rem; }
+            .add-cart-btn { width: 38px; height: 38px; font-size: 1.3rem; }
+        }
+
+        /* Notifications Toast Frame */
+        #toast {
+            position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%);
+            background: var(--success); color: white; padding: 12px 24px;
+            border-radius: 30px; font-weight: bold; box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            transition: bottom 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 3000;
+            text-align: center; white-space: nowrap; font-size: 0.9rem;
+        }
+        #toast.show { bottom: 30px; }
+        .empty-state { text-align: center; padding: 30px; color: var(--text-secondary); font-size: 0.9rem; }
+        
+        /* Smooth Overall App Reveal Animation instead of row lag */
+        .app-fade-in { animation: softReveal 0.25s ease-out forwards; }
+        @keyframes softReveal { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<!-- Backdrop Dimmer for Mobile Sidebar Menu -->
+<div id="sidebarBackdrop" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.5);z-index:1500;display:none;" onclick="toggleMobileCart(false)"></div>
+
+<div class="layout-container">
+    
+    <!-- Left Area: App Management Frame -->
+    <div class="main-content-flow">
+        
+        <div class="sticky-header-container">
+            <div class="header-section">
+                <h1>🛒 ARK Tienda Pro</h1>
+                
+                <div class="header-toggles">
+                    <label class="toggle-capsule toggle-vip">
+                        <span>👑 VIP</span>
+                        <div class="switch">
+                            <input type="checkbox" id="vipToggle">
+                            <span class="slider"></span>
+                        </div>
+                    </label>
+                    
+                    <label class="toggle-capsule toggle-fav">
+                        <span>⭐ Favoritos</span>
+                        <div class="switch">
+                            <input type="checkbox" id="favsToggle">
+                            <span class="slider"></span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="controls-grid">
+                <div class="search-box-wrapper">
+                    <input type="text" id="searchInput" placeholder="🔍 Buscar por nombre o comando (ej: Giga, Pienso, Bullet)...">
+                    <button class="clear-search-btn" id="clearSearchBtn">×</button>
+                </div>
+                
+                <select id="serverFilter"></select>
+                <select id="categoryFilter"></select>
+                
+                <button class="btn-reset" id="resetBtn">Resetear Filtros</button>
+            </div>
+        </div>
+
+        <div class="summary-bar">
+            <div>Resultados Filtrados: <span id="itemCount">0</span> ítems encontrados</div>
+            <div>Precios Sincronizados Localmente</div>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Categoría</th>
+                        <th>Comando 📋</th>
+                        <th id="thNombre" class="sort-trigger">Nombre / Ítem ↕</th>
+                        <th>Cant.</th>
+                        <th id="thPrecio" class="sort-trigger">Precio (Pts) ↕</th>
+                        <th>Añadir</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody" class="app-fade-in">
+                    <!-- Javascript DOM Injection -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Right Sidebar Area: Calculator Sheet -->
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-title">
+            <span>🧮 Calculadora de Puntos</span>
+            <button class="mobile-cart-close" onclick="toggleMobileCart(false)">×</button>
+        </div>
+        
+        <div class="cart-items-list" id="cartItemsList">
+            <!-- Items injected via App Engine -->
+        </div>
+        
+        <div class="cart-total-section">
+            <div class="cart-total-row">
+                <span>Total Calculado:</span>
+                <span id="cartTotalPoints" style="color: var(--success);">0</span>
+            </div>
+            <div style="font-size: 0.8rem; color: var(--text-secondary); text-align: right;">
+                Filtro Servidor: <span id="cartServerLabel" style="font-weight:700; color:var(--accent);">PVE</span>
+            </div>
+        </div>
+        
+        <div class="cart-actions">
+            <button class="btn-action-share" id="shareSummaryBtn" disabled>📋 Copiar Resumen de Compra</button>
+            <button class="btn-secondary" id="clearCartBtn" style="display: none; margin-top: 4px;">Vaciar Calculadora</button>
+        </div>
+    </div>
+
+</div>
+
+<!-- FAB Floating Component for Small Devices -->
+<div class="mobile-cart-fab" id="mobileCartFab" onclick="toggleMobileCart(true)">
+    🛒
+    <div class="mobile-cart-fab-badge" id="fabCountBadge">0</div>
+</div>
+
+<div id="toast">¡Hecho!</div>
+
+<script>
+    // System Raw Input Configurations Injection
+    const arkData = [{"Id": 1, "Categorias": ["\ud83d\udee1\ufe0f Armaduras"], "Comando": "/buy v100", "Nombre": "Tek Suit Pack", "Cantidad": "x1", "Precios": {"PVE": "2000", "4MAN": "2000", "3MAN": "2000", "2MAN": "2000"}, "Notas": "", "IsVIP": true}, {"Id": 2, "Categorias": ["\ud83d\udee1\ufe0f Armaduras"], "Comando": "/buy v101", "Nombre": "Metal Suit Pack x1", "Cantidad": "x1", "Precios": {"PVE": "1000", "4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 3, "Categorias": ["\ud83d\udc51 Kits VIP"], "Comando": "/buy v116", "Nombre": "KIT TAMEO VIP", "Cantidad": "x1", "Precios": {}, "Notas": "", "IsVIP": true}, {"Id": 4, "Categorias": ["\ud83d\udd2b Armas"], "Comando": "/buy v103", "Nombre": "Tek Pistol OFI x1", "Cantidad": "x1", "Precios": {"PVE": "1000", "4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 5, "Categorias": ["\ud83d\udd2b Armas"], "Comando": "/buy v104", "Nombre": "Tek Bow OFI x1", "Cantidad": "x1", "Precios": {"PVE": "1000", "4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 6, "Categorias": ["\ud83d\udd2b Armas"], "Comando": "/buy v105", "Nombre": "Tek Rifle OFI x1", "Cantidad": "x1", "Precios": {"PVE": "1000", "4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 7, "Categorias": ["\ud83d\udc51 Kits VIP"], "Comando": "/buy v106", "Nombre": "Tek Gravity OFI x1", "Cantidad": "x1", "Precios": {"PVE": "1000", "4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 8, "Categorias": ["\ud83d\udc51 Kits VIP"], "Comando": "/buy v107", "Nombre": "Tek Railgun OFI x1", "Cantidad": "x1", "Precios": {"PVE": "1000", "4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 9, "Categorias": ["\ud83d\udc51 Kits VIP"], "Comando": "/buy v108", "Nombre": "Tek Cruise Missile OFI x1", "Cantidad": "x1", "Precios": {"PVE": "1000", "4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 10, "Categorias": ["\ud83d\udd2b Armas"], "Comando": "/buy v109", "Nombre": "Tek Grenade Launcher OFI x1", "Cantidad": "x1", "Precios": {"PVE": "1000", "4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 11, "Categorias": ["\ud83d\udef8 Veh\u00edculos"], "Comando": "/buy v110", "Nombre": "Tek Hover-Skiff x1", "Cantidad": "x1", "Precios": {"PVE": "20000", "4MAN": "20000", "3MAN": "20000", "2MAN": "20000"}, "Notas": "", "IsVIP": true}, {"Id": 12, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy v111", "Nombre": "Tek Replicator x2", "Cantidad": "x1", "Precios": {"PVE": "1000", "4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 13, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy v112", "Nombre": "Tek Trough x10", "Cantidad": "x1", "Precios": {"PVE": "500", "4MAN": "500", "3MAN": "500", "2MAN": "500"}, "Notas": "", "IsVIP": true}, {"Id": 14, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy v113", "Nombre": "Egg Incubator x1", "Cantidad": "x1", "Precios": {"PVE": "100", "4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": true}, {"Id": 15, "Categorias": ["\ud83d\udee1\ufe0f Armaduras"], "Comando": "/buy v114", "Nombre": "Buceo Suit Pack", "Cantidad": "x1", "Precios": {}, "Notas": "", "IsVIP": true}, {"Id": 16, "Categorias": ["\ud83d\udc51 Kits VIP"], "Comando": "/buy v115", "Nombre": "KIT DE FABRICACION", "Cantidad": "x1", "Precios": {}, "Notas": "", "IsVIP": true}, {"Id": 17, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d01", "Nombre": "AlloSaddle", "Cantidad": "x1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 18, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d02", "Nombre": "AnkyloSaddle", "Cantidad": "x1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 19, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d03", "Nombre": "SpiderSaddle", "Cantidad": "x1", "Precios": {}, "Notas": "", "IsVIP": true}, {"Id": 20, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d04", "Nombre": "ArgentavisSaddle", "Cantidad": "x1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 21, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d05", "Nombre": "ArthroSaddle", "Cantidad": "x1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 22, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d06", "Nombre": "BaryonyxSaddle", "Cantidad": "x1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 23, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d07", "Nombre": "BasiloSaddle", "Cantidad": "x1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 24, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d08", "Nombre": "ToadSaddle", "Cantidad": "x1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 25, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d09", "Nombre": "TurtleSaddle", "Cantidad": "x1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 26, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d10", "Nombre": "CarnoSaddle", "Cantidad": "x1", "Precios": {}, "Notas": "", "IsVIP": true}, {"Id": 27, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d11", "Nombre": "BeaverSaddle", "Cantidad": "x1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 28, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d12", "Nombre": "DaeodonSaddle", "Cantidad": "x1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 29, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d13", "Nombre": "DiplodocusSaddle", "Cantidad": "x1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 30, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d14", "Nombre": "DireBearSaddle", "Cantidad": "x1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 31, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d15", "Nombre": "DoedSaddle", "Cantidad": "x1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 32, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d16", "Nombre": "DunkleosteusSaddle", "Cantidad": "x1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 33, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d17", "Nombre": "Gallimimus", "Cantidad": "1", "Precios": {}, "Notas": "", "IsVIP": true}, {"Id": 34, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d18", "Nombre": "GigantSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 35, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d19", "Nombre": "HyaenodonSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 36, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d20", "Nombre": "DolphinSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 37, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d21", "Nombre": "KaprosuchusSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 38, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d22", "Nombre": "MammothSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 39, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d23", "Nombre": "StagSaddle", "Cantidad": "1", "Precios": {}, "Notas": "", "IsVIP": true}, {"Id": 40, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d24", "Nombre": "MegalodonSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 41, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d25", "Nombre": "MegalosaurusSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 42, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d26", "Nombre": "MegalaniaSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 43, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d27", "Nombre": "MegatheriumSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 44, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d28", "Nombre": "MosaSaddle_Platform", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 45, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d29", "Nombre": "PachySaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 46, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d30", "Nombre": "PachyrhinoSaddle", "Cantidad": "1", "Precios": {}, "Notas": "", "IsVIP": true}, {"Id": 47, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d31", "Nombre": "Platform", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 48, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d32", "Nombre": "ParaSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 49, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d33", "Nombre": "PelaSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 50, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d34", "Nombre": "PhiomiaSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 51, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d35", "Nombre": "PlesiSaddle_Platform", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 52, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d36", "Nombre": "ProcoptodonSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 53, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d37", "Nombre": "PteroSaddle", "Cantidad": "1", "Precios": {}, "Notas": "", "IsVIP": true}, {"Id": 54, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d38", "Nombre": "ScorpionSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 55, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d39", "Nombre": "QuetzSaddle_Platform", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 56, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d40", "Nombre": "RaptorSaddl", "Cantidad": "1", "Precios": {}, "Notas": "", "IsVIP": true}, {"Id": 57, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d41", "Nombre": "RexSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 58, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d42", "Nombre": "RockGolemSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 59, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d43", "Nombre": "SaberSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 60, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d44", "Nombre": "SarcoSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 61, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d45", "Nombre": "SpinoSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 62, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d46", "Nombre": "StegoSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 63, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d47", "Nombre": "TapejaraSaddle", "Cantidad": "1", "Precios": {}, "Notas": "", "IsVIP": true}, {"Id": 64, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d48", "Nombre": "TerrorBirdSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 65, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d49", "Nombre": "TherizinosaurusSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 66, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d50", "Nombre": "SpineyLizardSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 67, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d51", "Nombre": "ThylacoSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 68, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d52", "Nombre": "TrikeSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 69, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d53", "Nombre": "TusoSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 70, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d54", "Nombre": "RhinoSaddle", "Cantidad": "1", "Precios": {}, "Notas": "", "IsVIP": true}, {"Id": 71, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d55", "Nombre": "YutySaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 72, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d56", "Nombre": "BasiliskSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 73, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d57", "Nombre": "CavewolfSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 74, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d58", "Nombre": "CrabSaddle", "Cantidad": "1", "Precios": {}, "Notas": "", "IsVIP": true}, {"Id": 75, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d59", "Nombre": "RockDrakeSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 76, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d60", "Nombre": "MoleRatSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 77, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d61", "Nombre": "GachaSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 78, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d62", "Nombre": "SpindlesSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 79, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d63", "Nombre": "OwlSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 80, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d64", "Nombre": "IceJumperSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 81, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d65", "Nombre": "GasBagsSaddle", "Cantidad": "1", "Precios": {}, "Notas": "", "IsVIP": true}, {"Id": 82, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d66", "Nombre": "SpaceWhaleSaddle_Tek", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 83, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d67", "Nombre": "GiantTurtleSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 84, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d68", "Nombre": "DeinonychusSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 85, "Categorias": ["\ud83c\udfc7 Monturas"], "Comando": "/buy d69", "Nombre": "CherufeSaddle", "Cantidad": "1", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": true}, {"Id": 86, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d100", "Nombre": "Abeja Gigante", "Cantidad": "1", "Precios": {"PVE": "2000", "1MAN": "2000"}, "Notas": "", "IsVIP": false}, {"Id": 87, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d101", "Nombre": "Achatina", "Cantidad": "1", "Precios": {"PVE": "2000", "1MAN": "2000"}, "Notas": "", "IsVIP": false}, {"Id": 88, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d102", "Nombre": "Amargasaurus", "Cantidad": "1", "Precios": {"PVE": "2000", "1MAN": "2000"}, "Notas": "", "IsVIP": false}, {"Id": 89, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d103", "Nombre": "Andrewsarchus", "Cantidad": "1", "Precios": {"PVE": "2000", "1MAN": "2000"}, "Notas": "", "IsVIP": false}, {"Id": 90, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d104", "Nombre": "Anquilosaurio-X", "Cantidad": "1", "Precios": {"PVE": "3000", "1MAN": "3000"}, "Notas": "", "IsVIP": false}, {"Id": 91, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d105", "Nombre": "Arthropluera", "Cantidad": "1", "Precios": {"PVE": "2000", "1MAN": "2000"}, "Notas": "", "IsVIP": false}, {"Id": 92, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d106", "Nombre": "Barionix", "Cantidad": "1", "Precios": {"PVE": "2000", "1MAN": "2000"}, "Notas": "", "IsVIP": false}, {"Id": 93, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d107", "Nombre": "Basilisco", "Cantidad": "1", "Precios": {"PVE": "3500", "1MAN": "3500"}, "Notas": "", "IsVIP": false}, {"Id": 94, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d108", "Nombre": "Beelzebufo", "Cantidad": "1", "Precios": {"PVE": "2000", "1MAN": "2000"}, "Notas": "", "IsVIP": false}, {"Id": 95, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d109", "Nombre": "Bloodstalke", "Cantidad": "1", "Precios": {"PVE": "6000", "1MAN": "6000"}, "Notas": "", "IsVIP": false}, {"Id": 96, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d110", "Nombre": "Brontosaurus", "Cantidad": "1", "Precios": {"PVE": "300", "1MAN": "300"}, "Notas": "", "IsVIP": false}, {"Id": 97, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d111", "Nombre": "Bulbdog", "Cantidad": "1", "Precios": {"PVE": "500", "1MAN": "500"}, "Notas": "", "IsVIP": false}, {"Id": 98, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d112", "Nombre": "Carcha", "Cantidad": "1", "Precios": {"PVE": "20000", "1MAN": "20000"}, "Notas": "", "IsVIP": false}, {"Id": 99, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d113", "Nombre": "Carnotaurus", "Cantidad": "1", "Precios": {"PVE": "500", "1MAN": "500"}, "Notas": "", "IsVIP": false}, {"Id": 100, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d114", "Nombre": "Castor", "Cantidad": "1", "Precios": {"PVE": "500", "1MAN": "500"}, "Notas": "", "IsVIP": false}, {"Id": 101, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d115", "Nombre": "Daedon", "Cantidad": "1", "Precios": {"PVE": "2000", "1MAN": "2000"}, "Notas": "", "IsVIP": false}, {"Id": 102, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d116", "Nombre": "Deinonychus", "Cantidad": "1", "Precios": {"PVE": "10000", "1MAN": "10000"}, "Notas": "", "IsVIP": false}, {"Id": 103, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d117", "Nombre": "Dientes de Sable", "Cantidad": "1", "Precios": {"PVE": "300", "1MAN": "300"}, "Notas": "", "IsVIP": false}, {"Id": 104, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d118", "Nombre": "Dinopithecus", "Cantidad": "1", "Precios": {"PVE": "10000", "1MAN": "10000"}, "Notas": "", "IsVIP": false}, {"Id": 105, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d119", "Nombre": "Doedicurus", "Cantidad": "1", "Precios": {"PVE": "500", "1MAN": "500"}, "Notas": "", "IsVIP": false}, {"Id": 106, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d120", "Nombre": "Enforcer", "Cantidad": "1", "Precios": {"PVE": "2000", "1MAN": "2000"}, "Notas": "", "IsVIP": false}, {"Id": 107, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d121", "Nombre": "Estego", "Cantidad": "1", "Precios": {"PVE": "2000", "1MAN": "2000"}, "Notas": "", "IsVIP": false}, {"Id": 108, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d122", "Nombre": "Fenrir", "Cantidad": "1", "Precios": {"PVE": "10000", "1MAN": "10000"}, "Notas": "", "IsVIP": false}, {"Id": 109, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d123", "Nombre": "Ferox", "Cantidad": "1", "Precios": {"PVE": "5000", "1MAN": "5000"}, "Notas": "", "IsVIP": false}, {"Id": 110, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d125", "Nombre": "Gasbags", "Cantidad": "1", "Precios": {"PVE": "2000", "1MAN": "2000"}, "Notas": "", "IsVIP": false}, {"Id": 111, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d126", "Nombre": "Giga", "Cantidad": "1", "Precios": {"PVE": "15000", "1MAN": "15000"}, "Notas": "", "IsVIP": false}, {"Id": 112, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d127", "Nombre": "Giga-R", "Cantidad": "1", "Precios": {"PVE": "15000", "1MAN": "15000"}, "Notas": "", "IsVIP": false}, {"Id": 113, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d128", "Nombre": "Golem", "Cantidad": "1", "Precios": {"PVE": "3000", "1MAN": "3000"}, "Notas": "", "IsVIP": false}, {"Id": 114, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d129", "Nombre": "Karkino", "Cantidad": "1", "Precios": {"PVE": "2000", "1MAN": "2000"}, "Notas": "", "IsVIP": false}, {"Id": 115, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d130", "Nombre": "Lobo", "Cantidad": "1", "Precios": {"PVE": "1000", "1MAN": "1000"}, "Notas": "", "IsVIP": false}, {"Id": 116, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d131", "Nombre": "Magmasaur", "Cantidad": "1", "Precios": {"PVE": "5000", "1MAN": "5000"}, "Notas": "", "IsVIP": false}, {"Id": 117, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d132", "Nombre": "Mamut", "Cantidad": "1", "Precios": {"PVE": "2000", "1MAN": "2000"}, "Notas": "", "IsVIP": false}, {"Id": 118, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d133", "Nombre": "Mantis", "Cantidad": "1", "Precios": {"PVE": "3000", "1MAN": "3000"}, "Notas": "", "IsVIP": false}, {"Id": 119, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d134", "Nombre": "Megaterio", "Cantidad": "1", "Precios": {"PVE": "3000", "1MAN": "3000"}, "Notas": "", "IsVIP": false}, {"Id": 120, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d135", "Nombre": "Nutria", "Cantidad": "1", "Precios": {"PVE": "300", "1MAN": "300"}, "Notas": "", "IsVIP": false}, {"Id": 121, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d136", "Nombre": "Noglin", "Cantidad": "1", "Precios": {"PVE": "10000", "1MAN": "10000"}, "Notas": "", "IsVIP": false}, {"Id": 122, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d137", "Nombre": "Oveja", "Cantidad": "1", "Precios": {"PVE": "500", "1MAN": "500"}, "Notas": "", "IsVIP": false}, {"Id": 123, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d138", "Nombre": "Parasaurio Tek", "Cantidad": "1", "Precios": {"PVE": "300", "1MAN": "300"}, "Notas": "", "IsVIP": false}, {"Id": 124, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d139", "Nombre": "Pulmonoscorpius", "Cantidad": "1", "Precios": {"PVE": "500", "1MAN": "500"}, "Notas": "", "IsVIP": false}, {"Id": 125, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d140", "Nombre": "Purlovia", "Cantidad": "1", "Precios": {"PVE": "800", "1MAN": "800"}, "Notas": "", "IsVIP": false}, {"Id": 126, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d141", "Nombre": "Raptor Tek", "Cantidad": "1", "Precios": {"PVE": "500", "1MAN": "500"}, "Notas": "", "IsVIP": false}, {"Id": 127, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d142", "Nombre": "Rata Rolante", "Cantidad": "1", "Precios": {"PVE": "500", "1MAN": "500"}, "Notas": "", "IsVIP": false}, {"Id": 128, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d143", "Nombre": "Ravager", "Cantidad": "1", "Precios": {"PVE": "500", "1MAN": "500"}, "Notas": "", "IsVIP": false}, {"Id": 129, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d144", "Nombre": "Reaper King", "Cantidad": "1", "Precios": {"PVE": "10000", "1MAN": "10000"}, "Notas": "", "IsVIP": false}, {"Id": 130, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d145", "Nombre": "Rex", "Cantidad": "1", "Precios": {"PVE": "8000", "1MAN": "8000"}, "Notas": "", "IsVIP": false}, {"Id": 131, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d146", "Nombre": "Rex Bionic", "Cantidad": "1", "Precios": {"PVE": "10000", "1MAN": "10000"}, "Notas": "", "IsVIP": false}, {"Id": 132, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d147", "Nombre": "Rex-X", "Cantidad": "1", "Precios": {"PVE": "9000", "1MAN": "9000"}, "Notas": "", "IsVIP": false}, {"Id": 133, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d148", "Nombre": "Rinoceronte", "Cantidad": "1", "Precios": {"PVE": "2000", "1MAN": "2000"}, "Notas": "", "IsVIP": false}, {"Id": 134, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d149", "Nombre": "Rola Bosta", "Cantidad": "1", "Precios": {"PVE": "500", "1MAN": "500"}, "Notas": "", "IsVIP": false}, {"Id": 135, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d150", "Nombre": "Shadowmane", "Cantidad": "1", "Precios": {"PVE": "20000", "1MAN": "20000"}, "Notas": "", "IsVIP": false}, {"Id": 136, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d151", "Nombre": "Shinehorn", "Cantidad": "1", "Precios": {"PVE": "200", "1MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 137, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d152", "Nombre": "Stryder (al azar)", "Cantidad": "1", "Precios": {"PVE": "20000", "1MAN": "20000"}, "Notas": "", "IsVIP": false}, {"Id": 138, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d153", "Nombre": "Therizinosaurus", "Cantidad": "1", "Precios": {"PVE": "2000", "1MAN": "2000"}, "Notas": "", "IsVIP": false}, {"Id": 139, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d154", "Nombre": "Thylacoleo -R", "Cantidad": "1", "Precios": {"PVE": "2000", "1MAN": "2000"}, "Notas": "", "IsVIP": false}, {"Id": 140, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d155", "Nombre": "Titanoboa", "Cantidad": "1", "Precios": {"PVE": "200", "1MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 141, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d156", "Nombre": "Triceratops", "Cantidad": "1", "Precios": {"PVE": "500", "1MAN": "500"}, "Notas": "", "IsVIP": false}, {"Id": 142, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d157", "Nombre": "Unicornio", "Cantidad": "1", "Precios": {"PVE": "1000", "1MAN": "1000"}, "Notas": "", "IsVIP": false}, {"Id": 143, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d158", "Nombre": "Velonasaur", "Cantidad": "1", "Precios": {"PVE": "3000", "1MAN": "3000"}, "Notas": "", "IsVIP": false}, {"Id": 144, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d159", "Nombre": "Yutirano", "Cantidad": "1", "Precios": {"PVE": "5000", "1MAN": "5000"}, "Notas": "", "IsVIP": false}, {"Id": 145, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d201", "Nombre": "Argentavis", "Cantidad": "1", "Precios": {"PVE": "100", "1MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 146, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d202", "Nombre": "Argentavis-X", "Cantidad": "1", "Precios": {"PVE": "200", "1MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 147, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d203", "Nombre": "Astrocetus", "Cantidad": "1", "Precios": {"PVE": "10000", "1MAN": "10000"}, "Notas": "", "IsVIP": false}, {"Id": 148, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d204", "Nombre": "Astrodelphis", "Cantidad": "1", "Precios": {"PVE": "7000", "1MAN": "7000"}, "Notas": "", "IsVIP": false}, {"Id": 149, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d205", "Nombre": "Desmodus", "Cantidad": "1", "Precios": {"PVE": "5000", "1MAN": "5000"}, "Notas": "", "IsVIP": false}, {"Id": 150, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d206", "Nombre": "Dragon de Roca", "Cantidad": "1", "Precios": {"PVE": "6000", "1MAN": "6000"}, "Notas": "", "IsVIP": false}, {"Id": 151, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d207", "Nombre": "Fenix", "Cantidad": "1", "Precios": {"PVE": "20000", "1MAN": "20000"}, "Notas": "", "IsVIP": false}, {"Id": 152, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d208", "Nombre": "Fjordhawk", "Cantidad": "1", "Precios": {"PVE": "2000", "1MAN": "2000"}, "Notas": "", "IsVIP": false}, {"Id": 153, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d209", "Nombre": "Grifo", "Cantidad": "1", "Precios": {"PVE": "2000", "1MAN": "2000"}, "Notas": "", "IsVIP": false}, {"Id": 154, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d210", "Nombre": "Maewing", "Cantidad": "1", "Precios": {"PVE": "500", "1MAN": "500"}, "Notas": "", "IsVIP": false}, {"Id": 155, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d211", "Nombre": "Managarmr", "Cantidad": "1", "Precios": {"PVE": "7000", "1MAN": "7000"}, "Notas": "", "IsVIP": false}, {"Id": 156, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d212", "Nombre": "Pteranodonte", "Cantidad": "1", "Precios": {"PVE": "100", "1MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 157, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d213", "Nombre": "Quetzal", "Cantidad": "1", "Precios": {"PVE": "1000", "1MAN": "1000"}, "Notas": "", "IsVIP": false}, {"Id": 158, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d214", "Nombre": "Quetzal Tek", "Cantidad": "1", "Precios": {"PVE": "3000", "1MAN": "3000"}, "Notas": "", "IsVIP": false}, {"Id": 159, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d215", "Nombre": "Sinomacrops", "Cantidad": "1", "Precios": {"PVE": "2000", "1MAN": "2000"}, "Notas": "", "IsVIP": false}, {"Id": 160, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d216", "Nombre": "Snow owl", "Cantidad": "1", "Precios": {"PVE": "1000", "1MAN": "1000"}, "Notas": "", "IsVIP": false}, {"Id": 161, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d217", "Nombre": "Snow owl-R", "Cantidad": "1", "Precios": {"PVE": "2000", "1MAN": "2000"}, "Notas": "", "IsVIP": false}, {"Id": 162, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d218", "Nombre": "Tapejara", "Cantidad": "1", "Precios": {"PVE": "1000", "1MAN": "1000"}, "Notas": "", "IsVIP": false}, {"Id": 163, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d219", "Nombre": "Tapejara-X", "Cantidad": "1", "Precios": {"PVE": "1500", "1MAN": "1500"}, "Notas": "", "IsVIP": false}, {"Id": 164, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d220", "Nombre": "Tropegnathus", "Cantidad": "1", "Precios": {"PVE": "3000", "1MAN": "3000"}, "Notas": "", "IsVIP": false}, {"Id": 165, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d221", "Nombre": "Voidwyrm", "Cantidad": "1", "Precios": {"PVE": "10000", "1MAN": "10000"}, "Notas": "", "IsVIP": false}, {"Id": 166, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d222", "Nombre": "Wyvern Ember", "Cantidad": "1", "Precios": {"PVE": "3000", "1MAN": "3000"}, "Notas": "", "IsVIP": false}, {"Id": 167, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d223", "Nombre": "Wyvern Fuego", "Cantidad": "1", "Precios": {"PVE": "2000", "1MAN": "2000"}, "Notas": "", "IsVIP": false}, {"Id": 168, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d224", "Nombre": "Wyvern Hielo", "Cantidad": "1", "Precios": {"PVE": "3000", "1MAN": "3000"}, "Notas": "", "IsVIP": false}, {"Id": 169, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d225", "Nombre": "Wyvern Rayo", "Cantidad": "1", "Precios": {"PVE": "4000", "1MAN": "4000"}, "Notas": "", "IsVIP": false}, {"Id": 170, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d226", "Nombre": "Wyvern Sangriento", "Cantidad": "1", "Precios": {"PVE": "3000", "1MAN": "3000"}, "Notas": "", "IsVIP": false}, {"Id": 171, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d227", "Nombre": "Wyvern Tropical", "Cantidad": "1", "Precios": {"PVE": "2000", "1MAN": "2000"}, "Notas": "", "IsVIP": false}, {"Id": 172, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d228", "Nombre": "Wyvern Veneno", "Cantidad": "1", "Precios": {"PVE": "1000", "1MAN": "1000"}, "Notas": "", "IsVIP": false}, {"Id": 173, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d229", "Nombre": "Rhyniognatha", "Cantidad": "1", "Precios": {"PVE": "9000", "1MAN": "9000"}, "Notas": "", "IsVIP": false}, {"Id": 174, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d317", "Nombre": "Golem X", "Cantidad": "1", "Precios": {"PVE": "5000", "1MAN": "5000"}, "Notas": "", "IsVIP": false}, {"Id": 175, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d300", "Nombre": "Anglerfish", "Cantidad": "1", "Precios": {"PVE": "3000", "1MAN": "3000"}, "Notas": "", "IsVIP": false}, {"Id": 176, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d301", "Nombre": "Basilosaurus", "Cantidad": "1", "Precios": {"PVE": "7000", "1MAN": "7000"}, "Notas": "", "IsVIP": false}, {"Id": 177, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d302", "Nombre": "Basilosaurus-X", "Cantidad": "1", "Precios": {"PVE": "8000", "1MAN": "8000"}, "Notas": "", "IsVIP": false}, {"Id": 178, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d303", "Nombre": "Carbonemys", "Cantidad": "1", "Precios": {"PVE": "200", "1MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 179, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d304", "Nombre": "Dunkleosteus", "Cantidad": "1", "Precios": {"PVE": "1000", "1MAN": "1000"}, "Notas": "", "IsVIP": false}, {"Id": 180, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d305", "Nombre": "Kaprosuchus", "Cantidad": "1", "Precios": {"PVE": "1000", "1MAN": "1000"}, "Notas": "", "IsVIP": false}, {"Id": 181, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d306", "Nombre": "Liopleurodon", "Cantidad": "1", "Precios": {"PVE": "2000", "1MAN": "2000"}, "Notas": "", "IsVIP": false}, {"Id": 182, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d307", "Nombre": "Megachelon", "Cantidad": "1", "Precios": {"PVE": "5000", "1MAN": "5000"}, "Notas": "", "IsVIP": false}, {"Id": 183, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d308", "Nombre": "Megalodon", "Cantidad": "1", "Precios": {"PVE": "2000", "1MAN": "2000"}, "Notas": "", "IsVIP": false}, {"Id": 184, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d309", "Nombre": "Megalodon-X", "Cantidad": "1", "Precios": {"PVE": "2500", "1MAN": "2500"}, "Notas": "", "IsVIP": false}, {"Id": 185, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d310", "Nombre": "Mosasaurus-X", "Cantidad": "1", "Precios": {"PVE": "7000", "1MAN": "7000"}, "Notas": "", "IsVIP": false}, {"Id": 186, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d311", "Nombre": "Plesiosaur", "Cantidad": "1", "Precios": {"PVE": "200", "1MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 187, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d312", "Nombre": "Spinosaurus", "Cantidad": "1", "Precios": {"PVE": "2000", "1MAN": "2000"}, "Notas": "", "IsVIP": false}, {"Id": 188, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d313", "Nombre": "Tusoteuthis", "Cantidad": "1", "Precios": {"PVE": "8000", "1MAN": "8000"}, "Notas": "", "IsVIP": false}, {"Id": 189, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d319", "Nombre": "Celacanto", "Cantidad": "1", "Precios": {"PVE": "50", "1MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 190, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d315", "Nombre": "Moschops", "Cantidad": "1", "Precios": {"PVE": "200", "1MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 191, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d316", "Nombre": "Troodon", "Cantidad": "1", "Precios": {"PVE": "200", "1MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 192, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d321", "Nombre": "Gigantopithecus", "Cantidad": "1", "Precios": {"PVE": "1000", "1MAN": "1000"}, "Notas": "", "IsVIP": false}, {"Id": 193, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d320", "Nombre": "Kentrosaurus", "Cantidad": "1", "Precios": {"PVE": "1000", "1MAN": "1000"}, "Notas": "", "IsVIP": false}, {"Id": 194, "Categorias": ["\ud83e\udd96 Dinosaurios"], "Comando": "/buy d322", "Nombre": "Kairuku", "Cantidad": "1", "Precios": {"PVE": "200", "1MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 195, "Categorias": ["\ud83e\udeb5 Recursos"], "Comando": "/buy r101", "Nombre": "ACEITE", "Cantidad": "1000.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 196, "Categorias": ["\ud83e\udeb5 Recursos"], "Comando": "/buy r102", "Nombre": "AMBER GRIS", "Cantidad": "10.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 197, "Categorias": ["\ud83e\udeb5 Recursos"], "Comando": "/buy r103", "Nombre": "ANGLER GEL", "Cantidad": "1000.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 198, "Categorias": ["\ud83e\udeb5 Recursos"], "Comando": "/buy r104", "Nombre": "AZUFRE", "Cantidad": "1000.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 199, "Categorias": ["\ud83e\udeb5 Recursos"], "Comando": "/buy r105", "Nombre": "BOLA DE GAS", "Cantidad": "1000.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 200, "Categorias": ["\ud83e\udeb5 Recursos"], "Comando": "/buy r106", "Nombre": "CARBON", "Cantidad": "1000.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 201, "Categorias": ["\ud83e\udeb5 Recursos"], "Comando": "/buy r107", "Nombre": "CEMENTO", "Cantidad": "1000.0", "Precios": {"PVE": "100", "4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 202, "Categorias": ["\ud83e\udeb5 Recursos"], "Comando": "/buy r108", "Nombre": "CRISTAL", "Cantidad": "1000.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 203, "Categorias": ["\ud83e\udeb5 Recursos"], "Comando": "/buy r109", "Nombre": "ELECTRONICOS", "Cantidad": "1000.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 204, "Categorias": ["\ud83e\udeb5 Recursos"], "Comando": "/buy r110", "Nombre": "ELEMENTO", "Cantidad": "10.0", "Precios": {"PVE": "100", "4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 205, "Categorias": ["\ud83e\udeb5 Recursos"], "Comando": "/buy r111", "Nombre": "FRAGMENTO DE ELEMENTO", "Cantidad": "1000.0", "Precios": {"PVE": "80", "4MAN": "80", "3MAN": "80", "2MAN": "80"}, "Notas": "", "IsVIP": false}, {"Id": 206, "Categorias": ["\ud83e\udeb5 Recursos"], "Comando": "/buy r112", "Nombre": "GEMA AZUL", "Cantidad": "100.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 207, "Categorias": ["\ud83e\udeb5 Recursos"], "Comando": "/buy r113", "Nombre": "GEMA ROJA", "Cantidad": "100.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 208, "Categorias": ["\ud83e\udeb5 Recursos"], "Comando": "/buy r114", "Nombre": "GEMA VERDE", "Cantidad": "100.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 209, "Categorias": ["\ud83e\udeb5 Recursos"], "Comando": "/buy r115", "Nombre": "LANA", "Cantidad": "100.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 210, "Categorias": ["\ud83e\udeb5 Recursos", "\ud83e\uddea Consumibles"], "Comando": "/buy r116", "Nombre": "LECHE DE WYVERN", "Cantidad": "10.0", "Precios": {"PVE": "100", "4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 211, "Categorias": ["\ud83e\udeb5 Recursos"], "Comando": "/buy r117", "Nombre": "MADERA FUNGICA", "Cantidad": "1000.0", "Precios": {"PVE": "80", "4MAN": "80", "3MAN": "80", "2MAN": "80"}, "Notas": "", "IsVIP": false}, {"Id": 212, "Categorias": ["\ud83e\udeb5 Recursos"], "Comando": "/buy r118", "Nombre": "METAL", "Cantidad": "1000.0", "Precios": {"PVE": "250", "4MAN": "250", "3MAN": "250", "2MAN": "250"}, "Notas": "", "IsVIP": false}, {"Id": 213, "Categorias": ["\ud83e\udeb5 Recursos"], "Comando": "/buy r119", "Nombre": "MUTAGENO", "Cantidad": "1.0", "Precios": {"PVE": "100", "4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 214, "Categorias": ["\ud83e\udeb5 Recursos"], "Comando": "/buy r120", "Nombre": "OBSIDIANA", "Cantidad": "1000.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 215, "Categorias": ["\ud83e\udeb5 Recursos"], "Comando": "/buy r121", "Nombre": "PELAJE", "Cantidad": "1000.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 216, "Categorias": ["\ud83e\udeb5 Recursos"], "Comando": "/buy r122", "Nombre": "PERLA BLANCA", "Cantidad": "1000.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 217, "Categorias": ["\ud83e\udeb5 Recursos"], "Comando": "/buy r123", "Nombre": "PERLA NEGRA", "Cantidad": "500.0", "Precios": {"PVE": "300", "4MAN": "300", "3MAN": "300", "2MAN": "300"}, "Notas": "", "IsVIP": false}, {"Id": 218, "Categorias": ["\ud83e\udeb5 Recursos"], "Comando": "/buy r124", "Nombre": "POLIMERO ORGANICO", "Cantidad": "1000.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 219, "Categorias": ["\ud83e\udeb5 Recursos"], "Comando": "/buy r125", "Nombre": "POLVORA", "Cantidad": "1000.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 220, "Categorias": ["\ud83e\udeb5 Recursos"], "Comando": "/buy r126", "Nombre": "POLVO DE ELEMENTO", "Cantidad": "1000.0", "Precios": {"PVE": "10", "4MAN": "10", "3MAN": "10", "2MAN": "10"}, "Notas": "", "IsVIP": false}, {"Id": 221, "Categorias": ["\ud83e\udeb5 Recursos"], "Comando": "/buy r127", "Nombre": "QUITINA", "Cantidad": "1000.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 222, "Categorias": ["\ud83e\udeb5 Recursos"], "Comando": "/buy r128", "Nombre": "SAL CRUDA", "Cantidad": "1000.0", "Precios": {"PVE": "20", "4MAN": "20", "3MAN": "20", "2MAN": "20"}, "Notas": "", "IsVIP": false}, {"Id": 223, "Categorias": ["\ud83e\udeb5 Recursos", "\ud83e\uddea Consumibles"], "Comando": "/buy r129", "Nombre": "SAVIA", "Cantidad": "1000.0", "Precios": {"PVE": "80", "4MAN": "80", "3MAN": "80", "2MAN": "80"}, "Notas": "", "IsVIP": false}, {"Id": 224, "Categorias": ["\ud83e\udeb5 Recursos"], "Comando": "/buy r130", "Nombre": "SILEX", "Cantidad": "1000.0", "Precios": {"PVE": "20", "4MAN": "20", "3MAN": "20", "2MAN": "20"}, "Notas": "", "IsVIP": false}, {"Id": 225, "Categorias": ["\ud83e\udeb5 Recursos"], "Comando": "/buy r131", "Nombre": "SUSTRATO ABSORBENTE", "Cantidad": "1000.0", "Precios": {"PVE": "100", "4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 226, "Categorias": ["\ud83e\udeb5 Recursos"], "Comando": "/buy r132", "Nombre": "PIEL", "Cantidad": "1000.0", "Precios": {"PVE": "20", "4MAN": "20", "3MAN": "20", "2MAN": "20"}, "Notas": "", "IsVIP": false}, {"Id": 227, "Categorias": ["\ud83e\uddea Consumibles"], "Comando": "/buy p101", "Nombre": "ANTIDOTO", "Cantidad": "1.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 228, "Categorias": ["\ud83e\uddea Consumibles"], "Comando": "/buy p102", "Nombre": "BEBIDA ENERGETICA", "Cantidad": "10.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 229, "Categorias": ["\ud83e\uddea Consumibles"], "Comando": "/buy p103", "Nombre": "BEBIDA MEDICINAL", "Cantidad": "10.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 230, "Categorias": ["\ud83e\uddea Consumibles"], "Comando": "/buy p104", "Nombre": "CARNE COCINADA DE PRIMERA", "Cantidad": "100.0", "Precios": {"PVE": "30", "4MAN": "30", "3MAN": "30", "2MAN": "30"}, "Notas": "", "IsVIP": false}, {"Id": 231, "Categorias": ["\ud83e\uddea Consumibles"], "Comando": "/buy p105", "Nombre": "CARNE CRUDA", "Cantidad": "100.0", "Precios": {"PVE": "10", "4MAN": "10", "3MAN": "10", "2MAN": "10"}, "Notas": "", "IsVIP": false}, {"Id": 232, "Categorias": ["\ud83e\uddea Consumibles"], "Comando": "/buy p106", "Nombre": "CARNE DE PRIMERA CRUDA", "Cantidad": "100.0", "Precios": {"PVE": "20", "4MAN": "20", "3MAN": "20", "2MAN": "20"}, "Notas": "", "IsVIP": false}, {"Id": 233, "Categorias": ["\ud83e\uddea Consumibles"], "Comando": "/buy p107", "Nombre": "CHILI PICANTE", "Cantidad": "1.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 234, "Categorias": ["\ud83e\uddea Consumibles"], "Comando": "/buy p108", "Nombre": "CORDERO CRUDO", "Cantidad": "100.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 235, "Categorias": ["\ud83e\uddea Consumibles"], "Comando": "/buy p109", "Nombre": "MIEL DE ABEJA", "Cantidad": "10.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 236, "Categorias": ["\ud83e\uddea Consumibles"], "Comando": "/buy p110", "Nombre": "PASTEL DE VEGETALES", "Cantidad": "10.0", "Precios": {"PVE": "100", "4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 237, "Categorias": ["\ud83e\uddea Consumibles"], "Comando": "/buy p111", "Nombre": "PESCADO CRUDO", "Cantidad": "100.0", "Precios": {"PVE": "20", "4MAN": "20", "3MAN": "20", "2MAN": "20"}, "Notas": "", "IsVIP": false}, {"Id": 238, "Categorias": ["\ud83e\uddea Consumibles"], "Comando": "/buy p112", "Nombre": "PESCADO DE PRIMERA CRUDO", "Cantidad": "100.0", "Precios": {"PVE": "30", "4MAN": "30", "3MAN": "30", "2MAN": "30"}, "Notas": "", "IsVIP": false}, {"Id": 239, "Categorias": ["\ud83e\uddea Consumibles"], "Comando": "/buy p113", "Nombre": "PIENSO BASICO", "Cantidad": "1.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 240, "Categorias": ["\ud83e\uddea Consumibles"], "Comando": "/buy p114", "Nombre": "PIENSO EXCEPCIONAL", "Cantidad": "1.0", "Precios": {"PVE": "100", "4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 241, "Categorias": ["\ud83e\uddea Consumibles"], "Comando": "/buy p115", "Nombre": "PIENSO EXTRAORDINARIO", "Cantidad": "1.0", "Precios": {"PVE": "100", "4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 242, "Categorias": ["\ud83e\uddea Consumibles"], "Comando": "/buy p116", "Nombre": "PIENSO NORMAL", "Cantidad": "1.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 243, "Categorias": ["\ud83e\uddea Consumibles"], "Comando": "/buy p117", "Nombre": "PIENSO SIMPLE", "Cantidad": "1.0", "Precios": {"PVE": "80", "4MAN": "80", "3MAN": "80", "2MAN": "80"}, "Notas": "", "IsVIP": false}, {"Id": 244, "Categorias": ["\ud83e\uddea Consumibles"], "Comando": "/buy p118", "Nombre": "PIENSO SUPERIOR", "Cantidad": "1.0", "Precios": {"PVE": "100", "4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 245, "Categorias": ["\ud83e\uddea Consumibles"], "Comando": "/buy p119", "Nombre": "SOPA AL CURRY", "Cantidad": "1.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 246, "Categorias": ["\ud83e\uddea Consumibles"], "Comando": "/buy p120", "Nombre": "SOPA DE AMNESIA", "Cantidad": "1.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 247, "Categorias": ["\ud83e\uddea Consumibles"], "Comando": "/buy p121", "Nombre": "FILETE DE LAS SOMBRAS", "Cantidad": "100.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 248, "Categorias": ["\ud83e\uddea Consumibles"], "Comando": "/buy p122", "Nombre": "TARTA DE BATALLA", "Cantidad": "100.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 249, "Categorias": ["\ud83c\udf31 Agricultura", "\ud83e\uddea Consumibles"], "Comando": "/buy p123", "Nombre": "FERTILIZANTE", "Cantidad": "10.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 250, "Categorias": ["\ud83e\uddea Consumibles"], "Comando": "/buy p124", "Nombre": "REPELENTE", "Cantidad": "100.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 251, "Categorias": ["\ud83e\uddea Consumibles"], "Comando": "/buy p125", "Nombre": "FLOR RARA", "Cantidad": "100.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 252, "Categorias": ["\ud83c\udf31 Agricultura", "\ud83e\uddea Consumibles"], "Comando": "/buy p126", "Nombre": "LIMON", "Cantidad": "100.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 253, "Categorias": ["\ud83c\udf31 Agricultura", "\ud83e\uddea Consumibles"], "Comando": "/buy p127", "Nombre": "MAIZ", "Cantidad": "100.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 254, "Categorias": ["\ud83c\udf31 Agricultura", "\ud83e\uddea Consumibles"], "Comando": "/buy p128", "Nombre": "PATATA", "Cantidad": "100.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 255, "Categorias": ["\ud83e\uddea Consumibles"], "Comando": "/buy p129", "Nombre": "SAVIA DE CACTUS", "Cantidad": "100.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 256, "Categorias": ["\ud83c\udf31 Agricultura", "\ud83e\uddea Consumibles"], "Comando": "/buy p130", "Nombre": "SEMILLA PLANTA X", "Cantidad": "10.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 257, "Categorias": ["\ud83c\udf31 Agricultura", "\ud83e\uddea Consumibles"], "Comando": "/buy p131", "Nombre": "SEMILLA PLANTA Y", "Cantidad": "10.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 258, "Categorias": ["\ud83e\uddea Consumibles"], "Comando": "/buy p132", "Nombre": "SETA RARA", "Cantidad": "100.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 259, "Categorias": ["\ud83c\udf31 Agricultura", "\ud83e\uddea Consumibles"], "Comando": "/buy p133", "Nombre": "SEMILLA R-1 VIP", "Cantidad": "1.0", "Precios": {"PVE": "80", "4MAN": "80", "3MAN": "80", "2MAN": "80"}, "Notas": "", "IsVIP": true}, {"Id": 260, "Categorias": ["\ud83c\udf31 Agricultura", "\ud83e\uddea Consumibles"], "Comando": "/buy p134", "Nombre": "SEMILLA R-2 VIP", "Cantidad": "1.0", "Precios": {"PVE": "100", "4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": true}, {"Id": 261, "Categorias": ["\ud83c\udf31 Agricultura", "\ud83e\uddea Consumibles"], "Comando": "/buy p135", "Nombre": "SEMILLA R-3 VIP", "Cantidad": "1.0", "Precios": {"PVE": "80", "4MAN": "80", "3MAN": "80", "2MAN": "80"}, "Notas": "", "IsVIP": true}, {"Id": 262, "Categorias": ["\ud83c\udf31 Agricultura", "\ud83e\uddea Consumibles"], "Comando": "/buy p136", "Nombre": "SEMILLA R-4 VIP", "Cantidad": "1.0", "Precios": {"PVE": "80", "4MAN": "80", "3MAN": "80", "2MAN": "80"}, "Notas": "", "IsVIP": true}, {"Id": 263, "Categorias": ["\ud83c\udf31 Agricultura", "\ud83e\uddea Consumibles"], "Comando": "/buy p137", "Nombre": "SEMILLA R-5 VIP", "Cantidad": "1.0", "Precios": {"PVE": "80", "4MAN": "80", "3MAN": "80", "2MAN": "80"}, "Notas": "", "IsVIP": true}, {"Id": 264, "Categorias": ["\ud83d\udca3 Munici\u00f3n", "\ud83e\uddea Consumibles"], "Comando": "/buy p138", "Nombre": "DARDOS SHOCK", "Cantidad": "5.0", "Precios": {"PVE": "100", "4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 265, "Categorias": ["\ud83d\udca3 Munici\u00f3n", "\ud83e\uddea Consumibles"], "Comando": "/buy p139", "Nombre": "DARDOS RANQUILIZANS", "Cantidad": "10.0", "Precios": {"PVE": "101", "4MAN": "101", "3MAN": "101", "2MAN": "101"}, "Notas": "", "IsVIP": false}, {"Id": 266, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s101", "Nombre": "Smithy x20", "Cantidad": "1.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 267, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s102", "Nombre": "Metal Ceiling x20", "Cantidad": "20.0", "Precios": {"PVE": "50", "4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 268, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s103", "Nombre": "Metal Foundation x20", "Cantidad": "20.0", "Precios": {"PVE": "2100", "4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 269, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s104", "Nombre": "Behemoth Gate x20", "Cantidad": "20.0", "Precios": {"PVE": "500", "4MAN": "300", "3MAN": "300", "2MAN": "300"}, "Notas": "", "IsVIP": false}, {"Id": 270, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s105", "Nombre": "Behemoth Gateway x20", "Cantidad": "20.0", "Precios": {"PVE": "500", "4MAN": "300", "3MAN": "300", "2MAN": "300"}, "Notas": "", "IsVIP": false}, {"Id": 271, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s106", "Nombre": "Metal Pillar x20", "Cantidad": "20.0", "Precios": {"PVE": "300", "4MAN": "300", "3MAN": "300", "2MAN": "300"}, "Notas": "", "IsVIP": false}, {"Id": 272, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s107", "Nombre": "Metal Wall x20", "Cantidad": "20.0", "Precios": {"PVE": "200", "4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 273, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s108", "Nombre": "Metal Doorframe x20", "Cantidad": "20.0", "Precios": {"PVE": "200", "4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 274, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s109", "Nombre": "Metal Windowframe x20", "Cantidad": "20.0", "Precios": {"PVE": "200", "4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 275, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s110", "Nombre": "Metal Window x20", "Cantidad": "20.0", "Precios": {"PVE": "100", "4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 276, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s111", "Nombre": "Electrical Outlet x20", "Cantidad": "20.0", "Precios": {"PVE": "100", "4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 277, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s112", "Nombre": "Vertical Electrical Cable x20", "Cantidad": "20.0", "Precios": {"PVE": "100", "4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 278, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s118", "Nombre": "Metal Irrigation Pipe - Tap x20", "Cantidad": "20.0", "Precios": {"PVE": "100", "4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 279, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s119", "Nombre": "Metal Billboard x20", "Cantidad": "20.0", "Precios": {"PVE": "100", "4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 280, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s120", "Nombre": "Metal Dinosaur Gateway x20", "Cantidad": "20.0", "Precios": {"PVE": "100", "4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 281, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s121", "Nombre": "Metal Dinosaur Gate x20", "Cantidad": "20.0", "Precios": {"PVE": "100", "4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 282, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s122", "Nombre": "Vault x2", "Cantidad": "2.0", "Precios": {"PVE": "500", "4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 283, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s123", "Nombre": "Metal Water Reservoir x20", "Cantidad": "20.0", "Precios": {"PVE": "100", "4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 284, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s125", "Nombre": "Sloped Metal Wall Left x20", "Cantidad": "20.0", "Precios": {"PVE": "100", "4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 285, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s128", "Nombre": "Beer Barrel x20", "Cantidad": "20.0", "Precios": {"PVE": "100", "4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 286, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s129", "Nombre": "Chemistry Bench x20", "Cantidad": "20.0", "Precios": {"PVE": "200", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 287, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s130", "Nombre": "Metal Tree Platform x20", "Cantidad": "20.0", "Precios": {"PVE": "500", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 288, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s134", "Nombre": "Behemoth Tek Gate x20", "Cantidad": "20.0", "Precios": {"PVE": "500", "4MAN": "300", "3MAN": "300", "2MAN": "300"}, "Notas": "", "IsVIP": false}, {"Id": 289, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s135", "Nombre": "Behemoth Tek Gateway x20", "Cantidad": "20.0", "Precios": {"PVE": "500", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 290, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s136", "Nombre": "Tek Ceiling x20", "Cantidad": "20.0", "Precios": {"PVE": "500", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 291, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s137", "Nombre": "Tek Dinosaur Gate x20", "Cantidad": "20.0", "Precios": {"PVE": "500", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 292, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s138", "Nombre": "Tek Dinosaur Gateway x20", "Cantidad": "20.0", "Precios": {"PVE": "300", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 293, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s139", "Nombre": "Tek Door x1", "Cantidad": "1.0", "Precios": {"PVE": "300", "4MAN": "300", "3MAN": "300", "2MAN": "300"}, "Notas": "", "IsVIP": false}, {"Id": 294, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s140", "Nombre": "Tek Doorframe x2", "Cantidad": "20.0", "Precios": {"PVE": "300", "4MAN": "300", "3MAN": "300", "2MAN": "300"}, "Notas": "", "IsVIP": false}, {"Id": 295, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s141", "Nombre": "Tek Forcefield x1", "Cantidad": "1.0", "Precios": {"PVE": "300", "4MAN": "300", "3MAN": "300", "2MAN": "300"}, "Notas": "", "IsVIP": false}, {"Id": 296, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s142", "Nombre": "Tek Foundation x20", "Cantidad": "20.0", "Precios": {"PVE": "500", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 297, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s143", "Nombre": "Tek Pillar x20", "Cantidad": "20.0", "Precios": {"PVE": "200", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 298, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s144", "Nombre": "Tek Wall x20", "Cantidad": "20.0", "Precios": {"PVE": "500", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 299, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s145", "Nombre": "Metal Cliff Platform x20", "Cantidad": "20.0", "Precios": {"PVE": "200", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 300, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s146", "Nombre": "Tek Canteen x20", "Cantidad": "20.0", "Precios": {"PVE": "500", "4MAN": "300", "3MAN": "300", "2MAN": "300"}, "Notas": "", "IsVIP": false}, {"Id": 301, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s147", "Nombre": "Tek Dedicated Storage x5", "Cantidad": "5.0", "Precios": {"PVE": "1000", "4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": false}, {"Id": 302, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s148", "Nombre": "Metal Ocean Platform x5", "Cantidad": "5.0", "Precios": {"PVE": "1000", "4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": false}, {"Id": 303, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s149", "Nombre": "Tek Jump Pad x10", "Cantidad": "20.0", "Precios": {"PVE": "300", "4MAN": "300", "3MAN": "300", "2MAN": "300"}, "Notas": "", "IsVIP": false}, {"Id": 304, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s201", "Nombre": "Fabricator x5", "Cantidad": "1.0", "Precios": {"PVE": "300", "4MAN": "300", "3MAN": "300", "2MAN": "300"}, "Notas": "", "IsVIP": false}, {"Id": 305, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s202", "Nombre": "Air Conditioner x20", "Cantidad": "20.0", "Precios": {"PVE": "200", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 306, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s203", "Nombre": "Electrical Generator x5", "Cantidad": "5.0", "Precios": {"PVE": "100", "4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 307, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s204", "Nombre": "Refrigerator x5", "Cantidad": "5.0", "Precios": {"PVE": "100", "4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 308, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s205", "Nombre": "Auto Turret x20", "Cantidad": "20.0", "Precios": {"PVE": "500", "4MAN": "500", "3MAN": "500", "2MAN": "500"}, "Notas": "", "IsVIP": false}, {"Id": 309, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s206", "Nombre": "Industrial Grill x5", "Cantidad": "5.0", "Precios": {"PVE": "300", "4MAN": "300", "3MAN": "300", "2MAN": "300"}, "Notas": "", "IsVIP": false}, {"Id": 310, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s207", "Nombre": "Industrial Forge x5", "Cantidad": "5.0", "Precios": {"PVE": "600", "4MAN": "600", "3MAN": "600", "2MAN": "600"}, "Notas": "", "IsVIP": false}, {"Id": 311, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s208", "Nombre": "Industrial Cooker x5", "Cantidad": "5.0", "Precios": {"PVE": "300", "4MAN": "300", "3MAN": "300", "2MAN": "300"}, "Notas": "", "IsVIP": false}, {"Id": 312, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s209", "Nombre": "Oil Pump x5", "Cantidad": "1.0", "Precios": {"PVE": "200", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 313, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s211", "Nombre": "Tek Transmitter x2", "Cantidad": "1.0", "Precios": {"PVE": "500", "4MAN": "500", "3MAN": "500", "2MAN": "500"}, "Notas": "", "IsVIP": false}, {"Id": 314, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s212", "Nombre": "Tek Generator x5", "Cantidad": "1.0", "Precios": {"PVE": "800", "4MAN": "800", "3MAN": "800", "2MAN": "800"}, "Notas": "", "IsVIP": false}, {"Id": 315, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s213", "Nombre": "Tek Teleporter x2", "Cantidad": "1.0", "Precios": {"PVE": "500", "4MAN": "500", "3MAN": "500", "2MAN": "500"}, "Notas": "", "IsVIP": false}, {"Id": 316, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s215", "Nombre": "Tek Turret x20", "Cantidad": "20.0", "Precios": {"PVE": "2000", "4MAN": "2000", "3MAN": "2000", "2MAN": "2000"}, "Notas": "", "IsVIP": false}, {"Id": 317, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s216", "Nombre": "Tek Trough x10", "Cantidad": "12.0", "Precios": {"PVE": "500", "4MAN": "500", "3MAN": "500", "2MAN": "500"}, "Notas": "", "IsVIP": false}, {"Id": 318, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s217", "Nombre": "Heavy Auto Turret x20", "Cantidad": "20.0", "Precios": {"PVE": "1000", "4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": false}, {"Id": 319, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s218", "Nombre": "Tek Sleeping Pod x5", "Cantidad": "5.0", "Precios": {"PVE": "800", "4MAN": "800", "3MAN": "800", "2MAN": "800"}, "Notas": "", "IsVIP": false}, {"Id": 320, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s219", "Nombre": "Egg Incubator x5", "Cantidad": "5.0", "Precios": {"PVE": "500", "4MAN": "500", "3MAN": "500", "2MAN": "500"}, "Notas": "", "IsVIP": false}, {"Id": 321, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s220", "Nombre": "Cryofridge x5", "Cantidad": "5.0", "Precios": {"PVE": "150", "4MAN": "150", "3MAN": "150", "2MAN": "150"}, "Notas": "", "IsVIP": false}, {"Id": 322, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s221", "Nombre": "Tek Hover-Skiff x1", "Cantidad": "1.0", "Precios": {"PVE": "30000", "4MAN": "30000", "3MAN": "30000", "2MAN": "30000"}, "Notas": "", "IsVIP": false}, {"Id": 323, "Categorias": ["\ud83e\uddf1 Estructuras"], "Comando": "/buy s222", "Nombre": "Cryopod x1", "Cantidad": "1.0", "Precios": {"PVE": "40", "4MAN": "40", "3MAN": "40", "2MAN": "40"}, "Notas": "", "IsVIP": false}, {"Id": 324, "Categorias": ["\ud83c\udfad Skins & Cosm\u00e9ticos"], "Comando": "/buy v201", "Nombre": "Skin_Glasses", "Cantidad": "1", "Precios": {"PVE": "200", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 325, "Categorias": ["\ud83c\udfad Skins & Cosm\u00e9ticos"], "Comando": "/buy v202", "Nombre": "Account_Game", "Cantidad": "1", "Precios": {"PVE": "200", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 326, "Categorias": ["\ud83c\udfad Skins & Cosm\u00e9ticos"], "Comando": "/buy v203", "Nombre": "SummerSwimPants_Alpha", "Cantidad": "1", "Precios": {"PVE": "200", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 327, "Categorias": ["\ud83c\udfad Skins & Cosm\u00e9ticos"], "Comando": "/buy v204", "Nombre": "SummerSwimShirt_Alpha", "Cantidad": "1", "Precios": {"PVE": "200", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 328, "Categorias": ["\ud83c\udfad Skins & Cosm\u00e9ticos"], "Comando": "/buy v205", "Nombre": "FE_Underwear_Araneo", "Cantidad": "1", "Precios": {"PVE": "200", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 329, "Categorias": ["\ud83c\udfad Skins & Cosm\u00e9ticos"], "Comando": "/buy v206", "Nombre": "FE_SwimShirt_Reaper", "Cantidad": "1", "Precios": {"PVE": "200", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 330, "Categorias": ["\ud83c\udfad Skins & Cosm\u00e9ticos"], "Comando": "/buy v207", "Nombre": "FE_SwimShirt_Araneo", "Cantidad": "1", "Precios": {"PVE": "200", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 331, "Categorias": ["\ud83c\udfad Skins & Cosm\u00e9ticos"], "Comando": "/buy v208", "Nombre": "SummerSwimPants_Flowers", "Cantidad": "1", "Precios": {"PVE": "200", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 332, "Categorias": ["\ud83c\udfad Skins & Cosm\u00e9ticos"], "Comando": "/buy v209", "Nombre": "SummerSwimShirt_Flowers", "Cantidad": "1", "Precios": {"PVE": "200", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 333, "Categorias": ["\ud83c\udfad Skins & Cosm\u00e9ticos"], "Comando": "/buy v210", "Nombre": "SummerSwimPants_Carno", "Cantidad": "1", "Precios": {"PVE": "200", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 334, "Categorias": ["\ud83c\udfad Skins & Cosm\u00e9ticos"], "Comando": "/buy v211", "Nombre": "SummerSwimShirt_Carno", "Cantidad": "1", "Precios": {"PVE": "200", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 335, "Categorias": ["\ud83c\udfad Skins & Cosm\u00e9ticos"], "Comando": "/buy v212", "Nombre": "FE_ScaryFaceMask", "Cantidad": "1", "Precios": {"PVE": "200", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 336, "Categorias": ["\ud83c\udfad Skins & Cosm\u00e9ticos"], "Comando": "/buy v213", "Nombre": "WW_WinterHatD", "Cantidad": "1", "Precios": {"PVE": "200", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 337, "Categorias": ["\ud83c\udfad Skins & Cosm\u00e9ticos"], "Comando": "/buy v214", "Nombre": "CupidBow", "Cantidad": "1", "Precios": {"PVE": "200", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 338, "Categorias": ["\ud83c\udfad Skins & Cosm\u00e9ticos"], "Comando": "/buy v215", "Nombre": "ChibiDino_Reaper", "Cantidad": "1", "Precios": {"PVE": "200", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 339, "Categorias": ["\ud83c\udfad Skins & Cosm\u00e9ticos"], "Comando": "/buy v216", "Nombre": "WW_Xmas_Bola", "Cantidad": "1", "Precios": {"PVE": "200", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 340, "Categorias": ["\ud83c\udfad Skins & Cosm\u00e9ticos"], "Comando": "/buy v217", "Nombre": "ValentinePants", "Cantidad": "1", "Precios": {"PVE": "200", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 341, "Categorias": ["\ud83c\udfad Skins & Cosm\u00e9ticos"], "Comando": "/buy v218", "Nombre": "ValentineShirt", "Cantidad": "1", "Precios": {"PVE": "200", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 342, "Categorias": ["\ud83c\udfad Skins & Cosm\u00e9ticos"], "Comando": "/buy v219", "Nombre": "WW_ReindeerAntlersHat", "Cantidad": "1", "Precios": {"PVE": "200", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 343, "Categorias": ["\ud83c\udfad Skins & Cosm\u00e9ticos"], "Comando": "/buy v220", "Nombre": "ValentineHaloHat", "Cantidad": "1", "Precios": {"PVE": "200", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 344, "Categorias": ["\ud83c\udfad Skins & Cosm\u00e9ticos"], "Comando": "/buy v221", "Nombre": "Vday_Handcuffs", "Cantidad": "1", "Precios": {"PVE": "200", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 345, "Categorias": ["\ud83c\udfad Skins & Cosm\u00e9ticos"], "Comando": "/buy v222", "Nombre": "Skin_SunGlasses", "Cantidad": "1", "Precios": {"PVE": "200", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 346, "Categorias": ["\ud83c\udfad Skins & Cosm\u00e9ticos"], "Comando": "/buy v223", "Nombre": "VDay_Grenade_ValentineBear", "Cantidad": "1", "Precios": {"PVE": "200", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 347, "Categorias": ["\ud83c\udfad Skins & Cosm\u00e9ticos"], "Comando": "/buy v224", "Nombre": "Flamethrower_SuperSoaker", "Cantidad": "1", "Precios": {"PVE": "200", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 348, "Categorias": ["\ud83c\udfad Skins & Cosm\u00e9ticos"], "Comando": "/buy v225", "Nombre": "Costume_Santa", "Cantidad": "1", "Precios": {"PVE": "200", "4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 349, "Categorias": ["\ud83d\udee1\ufe0f Armaduras"], "Comando": "/k100", "Nombre": "SET ROPA DE CAMUFLAJE", "Cantidad": "1.0", "Precios": {"4MAN": "500", "3MAN": "500", "2MAN": "500"}, "Notas": "", "IsVIP": false}, {"Id": 350, "Categorias": ["\ud83d\udee1\ufe0f Armaduras"], "Comando": "/k101", "Nombre": "SET ROPA DE ANTIDISTURBIO", "Cantidad": "1.0", "Precios": {"4MAN": "800", "3MAN": "800", "2MAN": "800"}, "Notas": "", "IsVIP": false}, {"Id": 351, "Categorias": ["\ud83d\udee1\ufe0f Armaduras"], "Comando": "/k102", "Nombre": "SET DE BUCEO", "Cantidad": "1.0", "Precios": {"4MAN": "500", "3MAN": "500", "2MAN": "500"}, "Notas": "", "IsVIP": false}, {"Id": 352, "Categorias": ["\ud83d\udee1\ufe0f Armaduras"], "Comando": "/k105", "Nombre": "SET DE METAL", "Cantidad": "1.0", "Precios": {"4MAN": "600", "3MAN": "600", "2MAN": "600"}, "Notas": "", "IsVIP": false}, {"Id": 353, "Categorias": ["\ud83d\udee1\ufe0f Armaduras"], "Comando": "/k106", "Nombre": "SET DE PELAJE", "Cantidad": "1.0", "Precios": {"4MAN": "500", "3MAN": "500", "2MAN": "500"}, "Notas": "", "IsVIP": false}, {"Id": 354, "Categorias": ["\ud83d\udee1\ufe0f Armaduras"], "Comando": "/k107", "Nombre": "SET AISLANTE", "Cantidad": "1.0", "Precios": {"4MAN": "600", "3MAN": "600", "2MAN": "600"}, "Notas": "", "IsVIP": false}, {"Id": 355, "Categorias": ["\ud83d\udee1\ufe0f Armaduras"], "Comando": "/k108", "Nombre": "SET ROPA TEK", "Cantidad": "1.0", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": false}, {"Id": 356, "Categorias": ["\ud83d\udd2b Armas"], "Comando": "/a100", "Nombre": "Herramienta de Taxidermia OFI", "Cantidad": "1.0", "Precios": {"4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 357, "Categorias": ["\ud83d\udd2b Armas"], "Comando": "/a101", "Nombre": "Ballesta OFI", "Cantidad": "1.0", "Precios": {"4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 358, "Categorias": ["\ud83d\udd2b Armas"], "Comando": "/a102", "Nombre": "Escopeta Corredera OFI", "Cantidad": "1.0", "Precios": {"4MAN": "300", "3MAN": "300", "2MAN": "300"}, "Notas": "", "IsVIP": false}, {"Id": 359, "Categorias": ["\ud83d\udd2b Armas"], "Comando": "/a103", "Nombre": "Hacha de metal OFI", "Cantidad": "1.0", "Precios": {"4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 360, "Categorias": ["\ud83d\udd2b Armas"], "Comando": "/a104", "Nombre": "Pico de metal OFI", "Cantidad": "1.0", "Precios": {"4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 361, "Categorias": ["\ud83d\udd2b Armas"], "Comando": "/a105", "Nombre": "Lanzador de arpones OFI", "Cantidad": "1.0", "Precios": {"4MAN": "200", "3MAN": "200", "2MAN": "200"}, "Notas": "", "IsVIP": false}, {"Id": 362, "Categorias": ["\ud83d\udd2b Armas"], "Comando": "/a106", "Nombre": "Motosierra OFI", "Cantidad": "1.0", "Precios": {"4MAN": "300", "3MAN": "300", "2MAN": "300"}, "Notas": "", "IsVIP": false}, {"Id": 363, "Categorias": ["\ud83d\udd2b Armas"], "Comando": "/a107", "Nombre": "Rifle de cuello largo OFI", "Cantidad": "1.0", "Precios": {"4MAN": "300", "3MAN": "300", "2MAN": "300"}, "Notas": "", "IsVIP": false}, {"Id": 364, "Categorias": ["\ud83d\udd2b Armas"], "Comando": "/a108", "Nombre": "Taladro Minero OFI", "Cantidad": "1.0", "Precios": {"4MAN": "400", "3MAN": "400", "2MAN": "400"}, "Notas": "", "IsVIP": false}, {"Id": 365, "Categorias": ["\ud83d\udd2b Armas"], "Comando": "/a109", "Nombre": "Espada OFI", "Cantidad": "1.0", "Precios": {"4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 366, "Categorias": ["\ud83d\udd2b Armas"], "Comando": "/a110", "Nombre": "Lanzacohetes OFI", "Cantidad": "1.0", "Precios": {"4MAN": "300", "3MAN": "300", "2MAN": "300"}, "Notas": "", "IsVIP": false}, {"Id": 367, "Categorias": ["\ud83d\udd2b Armas"], "Comando": "/a111", "Nombre": "Torreta pesada OFI", "Cantidad": "1.0", "Precios": {"4MAN": "30", "3MAN": "30", "2MAN": "30"}, "Notas": "", "IsVIP": false}, {"Id": 368, "Categorias": ["\ud83d\udd2b Armas"], "Comando": "/a113", "Nombre": "Arco Tek OFI", "Cantidad": "1.0", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": false}, {"Id": 369, "Categorias": ["\ud83d\udd2b Armas"], "Comando": "/a115", "Nombre": "Detonador remoto OFI", "Cantidad": "1.0", "Precios": {"4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 370, "Categorias": ["\ud83d\udd2b Armas"], "Comando": "/a116", "Nombre": "Arco compuesto OFI", "Cantidad": "1.0", "Precios": {"4MAN": "400", "3MAN": "400", "2MAN": "400"}, "Notas": "", "IsVIP": false}, {"Id": 371, "Categorias": ["\ud83d\udd2b Armas"], "Comando": "/a117", "Nombre": "Pistola fabricada OFI", "Cantidad": "1.0", "Precios": {"4MAN": "300", "3MAN": "300", "2MAN": "300"}, "Notas": "", "IsVIP": false}, {"Id": 372, "Categorias": ["\ud83d\udd2b Armas"], "Comando": "/a118", "Nombre": "Rifle de francotirador OFI", "Cantidad": "1.0", "Precios": {"4MAN": "500", "3MAN": "500", "2MAN": "500"}, "Notas": "", "IsVIP": false}, {"Id": 373, "Categorias": ["\ud83d\udd2b Armas"], "Comando": "/a119", "Nombre": "Lanzallamas OFI", "Cantidad": "1.0", "Precios": {"4MAN": "500", "3MAN": "500", "2MAN": "500"}, "Notas": "", "IsVIP": false}, {"Id": 374, "Categorias": ["\ud83d\udd2b Armas"], "Comando": "/a120", "Nombre": "Lanzador de arpones OFI", "Cantidad": "1.0", "Precios": {"4MAN": "400", "3MAN": "400", "2MAN": "400"}, "Notas": "", "IsVIP": false}, {"Id": 375, "Categorias": ["\ud83d\udd2b Armas"], "Comando": "/a121", "Nombre": "Rifle de cuello largo OFI", "Cantidad": "1.0", "Precios": {"4MAN": "300", "3MAN": "300", "2MAN": "300"}, "Notas": "", "IsVIP": false}, {"Id": 376, "Categorias": ["\ud83d\udd2b Armas"], "Comando": "/a122", "Nombre": "Escopeta Corredera OFI", "Cantidad": "1.0", "Precios": {"4MAN": "300", "3MAN": "300", "2MAN": "300"}, "Notas": "", "IsVIP": false}, {"Id": 377, "Categorias": ["\ud83d\udd2b Armas"], "Comando": "/a123", "Nombre": "Lanzacohetes OFI", "Cantidad": "1.0", "Precios": {"4MAN": "500", "3MAN": "500", "2MAN": "500"}, "Notas": "", "IsVIP": false}, {"Id": 378, "Categorias": ["\ud83d\udd2b Armas"], "Comando": "/a124", "Nombre": "Pistola simple OFI", "Cantidad": "1.0", "Precios": {"4MAN": "300", "3MAN": "300", "2MAN": "300"}, "Notas": "", "IsVIP": false}, {"Id": 379, "Categorias": ["\ud83d\udd2b Armas"], "Comando": "/a125", "Nombre": "Canion electromagnetico Tek OFI", "Cantidad": "1.0", "Precios": {"4MAN": "500", "3MAN": "500", "2MAN": "500"}, "Notas": "", "IsVIP": false}, {"Id": 380, "Categorias": ["\ud83d\udd2b Armas"], "Comando": "/a126", "Nombre": "Rifle Tek OFI", "Cantidad": "1.0", "Precios": {"4MAN": "1500", "3MAN": "1500", "2MAN": "1500"}, "Notas": "", "IsVIP": false}, {"Id": 381, "Categorias": ["\ud83d\udd2b Armas"], "Comando": "/a127", "Nombre": "Lanzagranadas Tek OFI", "Cantidad": "1.0", "Precios": {"4MAN": "1200", "3MAN": "1200", "2MAN": "1200"}, "Notas": "", "IsVIP": false}, {"Id": 382, "Categorias": ["\ud83d\udd2b Armas"], "Comando": "/a128", "Nombre": "Rifle de asalto OFI", "Cantidad": "1.0", "Precios": {"4MAN": "800", "3MAN": "800", "2MAN": "800"}, "Notas": "", "IsVIP": false}, {"Id": 383, "Categorias": ["\ud83d\udd2b Armas"], "Comando": "/a129", "Nombre": "Catalejo OFI", "Cantidad": "1.0", "Precios": {"4MAN": "20", "3MAN": "20", "2MAN": "20"}, "Notas": "", "IsVIP": false}, {"Id": 384, "Categorias": ["\ud83d\udca3 Munici\u00f3n"], "Comando": "/m100", "Nombre": "Bala avanzada", "Cantidad": "100.0", "Precios": {"4MAN": "500", "3MAN": "500", "2MAN": "500"}, "Notas": "", "IsVIP": false}, {"Id": 385, "Categorias": ["\ud83d\udca3 Munici\u00f3n"], "Comando": "/m101", "Nombre": "Bala de rifle avanzada", "Cantidad": "100.0", "Precios": {"4MAN": "500", "3MAN": "500", "2MAN": "500"}, "Notas": "", "IsVIP": false}, {"Id": 386, "Categorias": ["\ud83d\udca3 Munici\u00f3n"], "Comando": "/m102", "Nombre": "Bala de francotirador avanzada", "Cantidad": "100.0", "Precios": {"4MAN": "500", "3MAN": "500", "2MAN": "500"}, "Notas": "", "IsVIP": false}, {"Id": 387, "Categorias": ["\ud83d\udca3 Munici\u00f3n"], "Comando": "/m103", "Nombre": "Carga C4", "Cantidad": "50.0", "Precios": {"4MAN": "500", "3MAN": "500", "2MAN": "500"}, "Notas": "", "IsVIP": false}, {"Id": 388, "Categorias": ["\ud83d\udca3 Munici\u00f3n"], "Comando": "/m104", "Nombre": "Bala de ca\u00f1\u00f3n", "Cantidad": "50.0", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": false}, {"Id": 389, "Categorias": ["\ud83d\udca3 Munici\u00f3n"], "Comando": "/m105", "Nombre": "Flecha de fuego", "Cantidad": "100.0", "Precios": {"4MAN": "800", "3MAN": "800", "2MAN": "800"}, "Notas": "", "IsVIP": false}, {"Id": 390, "Categorias": ["\ud83d\udca3 Munici\u00f3n"], "Comando": "/m106", "Nombre": "Munici\u00f3n de lanzallamas", "Cantidad": "100.0", "Precios": {"4MAN": "800", "3MAN": "800", "2MAN": "800"}, "Notas": "", "IsVIP": false}, {"Id": 391, "Categorias": ["\ud83d\udca3 Munici\u00f3n"], "Comando": "/m107", "Nombre": "Gancho de agarre", "Cantidad": "20.0", "Precios": {"4MAN": "500", "3MAN": "500", "2MAN": "500"}, "Notas": "", "IsVIP": false}, {"Id": 392, "Categorias": ["\ud83d\udca3 Munici\u00f3n"], "Comando": "/m108", "Nombre": "Flecha de metal", "Cantidad": "50.0", "Precios": {"4MAN": "400", "3MAN": "400", "2MAN": "400"}, "Notas": "", "IsVIP": false}, {"Id": 393, "Categorias": ["\ud83d\udca3 Munici\u00f3n"], "Comando": "/m109", "Nombre": "Dardo de feromonas", "Cantidad": "50.0", "Precios": {"4MAN": "500", "3MAN": "500", "2MAN": "500"}, "Notas": "", "IsVIP": false}, {"Id": 394, "Categorias": ["\ud83d\udca3 Munici\u00f3n"], "Comando": "/m110", "Nombre": "Misil teledirigido", "Cantidad": "20.0", "Precios": {"4MAN": "1000", "3MAN": "1000", "2MAN": "1000"}, "Notas": "", "IsVIP": false}, {"Id": 395, "Categorias": ["\ud83d\udca3 Munici\u00f3n"], "Comando": "/m111", "Nombre": "Granada propulsada por cohete", "Cantidad": "20.0", "Precios": {"4MAN": "600", "3MAN": "600", "2MAN": "600"}, "Notas": "", "IsVIP": false}, {"Id": 396, "Categorias": ["\ud83d\udca3 Munici\u00f3n"], "Comando": "/m113", "Nombre": "Bala simple", "Cantidad": "50.0", "Precios": {"4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 397, "Categorias": ["\ud83d\udca3 Munici\u00f3n"], "Comando": "/m114", "Nombre": "Munici\u00f3n de rifle simple", "Cantidad": "100.0", "Precios": {"4MAN": "500", "3MAN": "500", "2MAN": "500"}, "Notas": "", "IsVIP": false}, {"Id": 398, "Categorias": ["\ud83d\udca3 Munici\u00f3n"], "Comando": "/m115", "Nombre": "Munici\u00f3n de escopeta", "Cantidad": "100.0", "Precios": {"4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 399, "Categorias": ["\ud83d\udca3 Munici\u00f3n"], "Comando": "/m116", "Nombre": "Flecha tranquilizante", "Cantidad": "100.0", "Precios": {"4MAN": "50", "3MAN": "50", "2MAN": "50"}, "Notas": "", "IsVIP": false}, {"Id": 400, "Categorias": ["\ud83d\udca3 Munici\u00f3n"], "Comando": "/m117", "Nombre": "Dardo tranquilizante", "Cantidad": "100.0", "Precios": {"4MAN": "100", "3MAN": "100", "2MAN": "100"}, "Notas": "", "IsVIP": false}, {"Id": 401, "Categorias": ["\ud83d\udca3 Munici\u00f3n"], "Comando": "/m118", "Nombre": "C\u00e1psula de cohete", "Cantidad": "100.0", "Precios": {"4MAN": "500", "3MAN": "500", "2MAN": "500"}, "Notas": "", "IsVIP": false}, {"Id": 402, "Categorias": ["\ud83d\udca3 Munici\u00f3n"], "Comando": "/m119", "Nombre": "Proyectil de ca\u00f1\u00f3n", "Cantidad": "20.0", "Precios": {"4MAN": "500", "3MAN": "500", "2MAN": "500"}, "Notas": "", "IsVIP": false}, {"Id": 403, "Categorias": ["\ud83c\udfc6 Artefactos & Bosses"], "Comando": "/b01", "Nombre": "Artef y Trib Broodmother Alpha", "Cantidad": "1", "Precios": {"4MAN": "4000", "3MAN": "4000", "2MAN": "4000", "1MAN": "4000", "PVE": "4000", "8MAN": "4000"}, "Notas": "", "IsVIP": false}, {"Id": 404, "Categorias": ["\ud83c\udfc6 Artefactos & Bosses"], "Comando": "/b02", "Nombre": "Art y Trib Megapithecus Alpha", "Cantidad": "1", "Precios": {"4MAN": "4000", "3MAN": "4000", "2MAN": "4000", "1MAN": "4000", "PVE": "4000", "8MAN": "4000"}, "Notas": "", "IsVIP": false}, {"Id": 405, "Categorias": ["\ud83c\udfc6 Artefactos & Bosses"], "Comando": "/b03", "Nombre": "Artef y Trib Dragon Alpha", "Cantidad": "1", "Precios": {"4MAN": "4000", "3MAN": "4000", "2MAN": "4000", "1MAN": "4000", "PVE": "4000", "8MAN": "4000"}, "Notas": "", "IsVIP": false}, {"Id": 406, "Categorias": ["\ud83c\udfc6 Artefactos & Bosses"], "Comando": "/b04", "Nombre": "Tributos The Island Ascension Alpha", "Cantidad": "1", "Precios": {"4MAN": "4000", "3MAN": "4000", "2MAN": "4000", "1MAN": "4000", "PVE": "4000", "8MAN": "4000"}, "Notas": "", "IsVIP": false}, {"Id": 407, "Categorias": ["\ud83c\udfc6 Artefactos & Bosses"], "Comando": "/b05", "Nombre": "Art y Trib Boss Alpha (Ragnarok)", "Cantidad": "1", "Precios": {"4MAN": "4000", "3MAN": "4000", "2MAN": "4000", "1MAN": "4000", "PVE": "4000", "8MAN": "4000"}, "Notas": "", "IsVIP": false}, {"Id": 408, "Categorias": ["\ud83c\udfc6 Artefactos & Bosses"], "Comando": "/b06", "Nombre": "Art y Tribut Rockwell Alpha (Aberration)", "Cantidad": "1", "Precios": {"4MAN": "4000", "3MAN": "4000", "2MAN": "4000", "1MAN": "4000", "PVE": "4000", "8MAN": "4000"}, "Notas": "", "IsVIP": false}, {"Id": 409, "Categorias": ["\ud83c\udfc6 Artefactos & Bosses"], "Comando": "/b07", "Nombre": "Art y Trib Boss Alpha (The Center)", "Cantidad": "1", "Precios": {"4MAN": "4000", "3MAN": "4000", "2MAN": "4000", "1MAN": "4000", "PVE": "4000", "8MAN": "4000"}, "Notas": "", "IsVIP": false}, {"Id": 410, "Categorias": ["\ud83c\udfc6 Artefactos & Bosses"], "Comando": "/b08", "Nombre": "Art y Trib Boss Alpha (Valgero)", "Cantidad": "1", "Precios": {"4MAN": "4000", "3MAN": "4000", "2MAN": "4000", "1MAN": "4000", "PVE": "4000", "8MAN": "4000"}, "Notas": "", "IsVIP": false}, {"Id": 411, "Categorias": ["\ud83c\udfc6 Artefactos & Bosses"], "Comando": "/b09", "Nombre": "Art y Trib TITAN DEL BOSQUE", "Cantidad": "1", "Precios": {"4MAN": "2000", "3MAN": "2000", "2MAN": "2000", "1MAN": "2000", "PVE": "2000", "8MAN": "2000"}, "Notas": "", "IsVIP": false}, {"Id": 412, "Categorias": ["\ud83c\udfc6 Artefactos & Bosses"], "Comando": "/b10", "Nombre": "Art y Trib TITAN DEL HIELO", "Cantidad": "1", "Precios": {"4MAN": "2000", "3MAN": "2000", "2MAN": "2000", "1MAN": "2000", "PVE": "2000", "8MAN": "2000"}, "Notas": "", "IsVIP": false}, {"Id": 413, "Categorias": ["\ud83c\udfc6 Artefactos & Bosses"], "Comando": "/b11", "Nombre": "Art y Trib TITAN DEL DESIERTO", "Cantidad": "1", "Precios": {"4MAN": "2000", "3MAN": "2000", "2MAN": "2000", "1MAN": "2000", "PVE": "2000", "8MAN": "2000"}, "Notas": "", "IsVIP": false}, {"Id": 414, "Categorias": ["\ud83c\udfc6 Artefactos & Bosses"], "Comando": "/b12", "Nombre": "crystal_queen_alpha artefactos (VIP)", "Cantidad": "1", "Precios": {"4MAN": "2000", "3MAN": "2000", "2MAN": "2000", "1MAN": "2000", "PVE": "2000", "8MAN": "2000"}, "Notas": "", "IsVIP": true}, {"Id": 415, "Categorias": ["\ud83c\udfc6 Artefactos & Bosses"], "Comando": "/b13", "Nombre": "rockwell_ab_alpha artefactos (VIP)", "Cantidad": "1", "Precios": {"4MAN": "2000", "3MAN": "2000", "2MAN": "2000", "1MAN": "2000", "PVE": "2000", "8MAN": "2000"}, "Notas": "", "IsVIP": true}, {"Id": 416, "Categorias": ["\ud83c\udfc6 Artefactos & Bosses"], "Comando": "/b14", "Nombre": "nan", "Cantidad": "1", "Precios": {}, "Notas": "", "IsVIP": false}, {"Id": 417, "Categorias": ["\ud83c\udfc6 Artefactos & Bosses"], "Comando": "/b15", "Nombre": "nan", "Cantidad": "1", "Precios": {}, "Notas": "", "IsVIP": false}, {"Id": 418, "Categorias": ["\ud83c\udfc6 Artefactos & Bosses"], "Comando": "/b16", "Nombre": "nan", "Cantidad": "1", "Precios": {}, "Notas": "", "IsVIP": false}, {"Id": 419, "Categorias": ["\ud83c\udfc6 Artefactos & Bosses"], "Comando": "/b17", "Nombre": "nan", "Cantidad": "1", "Precios": {}, "Notas": "", "IsVIP": false}, {"Id": 420, "Categorias": ["\ud83c\udfc6 Artefactos & Bosses"], "Comando": "/b18", "Nombre": "nan", "Cantidad": "1", "Precios": {}, "Notas": "", "IsVIP": false}, {"Id": 421, "Categorias": ["\ud83c\udfc6 Artefactos & Bosses"], "Comando": "/b19", "Nombre": "nan", "Cantidad": "1", "Precios": {}, "Notas": "", "IsVIP": false}, {"Id": 422, "Categorias": ["\ud83c\udfc6 Artefactos & Bosses"], "Comando": "/b20", "Nombre": "nan", "Cantidad": "1", "Precios": {}, "Notas": "", "IsVIP": false}, {"Id": 423, "Categorias": ["\ud83c\udfc6 Artefactos & Bosses"], "Comando": "/b21", "Nombre": "nan", "Cantidad": "1", "Precios": {}, "Notas": "", "IsVIP": false}, {"Id": 424, "Categorias": ["\ud83c\udfc6 Artefactos & Bosses"], "Comando": "/b22", "Nombre": "nan", "Cantidad": "1", "Precios": {}, "Notas": "", "IsVIP": false}, {"Id": 425, "Categorias": ["\ud83c\udfc6 Artefactos & Bosses"], "Comando": "/b23", "Nombre": "nan", "Cantidad": "1", "Precios": {}, "Notas": "", "IsVIP": false}, {"Id": 426, "Categorias": ["\ud83c\udfc6 Artefactos & Bosses"], "Comando": "/b24", "Nombre": "nan", "Cantidad": "1", "Precios": {}, "Notas": "", "IsVIP": false}, {"Id": 427, "Categorias": ["\ud83c\udfc6 Artefactos & Bosses"], "Comando": "/b25", "Nombre": "nan", "Cantidad": "1", "Precios": {}, "Notas": "", "IsVIP": false}, {"Id": 428, "Categorias": ["\ud83c\udfc6 Artefactos & Bosses"], "Comando": "/b26", "Nombre": "nan", "Cantidad": "1", "Precios": {}, "Notas": "", "IsVIP": false}, {"Id": 429, "Categorias": ["\u2728 Extras & Servicios"], "Comando": "/u100", "Nombre": "Drop Solo Ext", "Cantidad": "1.0", "Precios": {"8MAN": "20000", "4MAN": "20000", "2MAN": "20000"}, "Notas": "", "IsVIP": false}, {"Id": 430, "Categorias": ["\u2728 Extras & Servicios"], "Comando": "/u101", "Nombre": "Ascencion Isla NivelExtra (no tek)", "Cantidad": "1.0", "Precios": {"8MAN": "5000", "4MAN": "5000", "2MAN": "5000"}, "Notas": "", "IsVIP": false}, {"Id": 431, "Categorias": ["\u2728 Extras & Servicios"], "Comando": "/u102", "Nombre": "Ascencion Abe NivelExtra  (no tek)", "Cantidad": "1.0", "Precios": {"8MAN": "10000", "4MAN": "10000", "2MAN": "10000"}, "Notas": "", "IsVIP": false}, {"Id": 432, "Categorias": ["\u2728 Extras & Servicios"], "Comando": "/u103", "Nombre": "Ascencion ext Nivel Extra  (no tek)", "Cantidad": "1.0", "Precios": {"8MAN": "20000", "4MAN": "20000", "2MAN": "20000"}, "Notas": "", "IsVIP": false}, {"Id": 433, "Categorias": ["\u2728 Extras & Servicios"], "Comando": "/u104", "Nombre": "Ascencion gen1 Nivel Extra  (no tek)", "Cantidad": "1.0", "Precios": {"8MAN": "20000", "4MAN": "20000", "2MAN": "20000"}, "Notas": "", "IsVIP": false}, {"Id": 434, "Categorias": ["\u2728 Extras & Servicios"], "Comando": "/u105", "Nombre": "Ascencion gen2 Nivel Extra  (no tek)", "Cantidad": "1.0", "Precios": {"8MAN": "20000", "4MAN": "20000", "2MAN": "20000"}, "Notas": "", "IsVIP": false}, {"Id": 435, "Categorias": ["\u2728 Extras & Servicios"], "Comando": "/u106", "Nombre": "Notes/Rune Extra Levels", "Cantidad": "1.0", "Precios": {"8MAN": "20000", "4MAN": "20000", "2MAN": "20000"}, "Notas": "", "IsVIP": false}, {"Id": 436, "Categorias": ["\u2728 Extras & Servicios"], "Comando": "/u107", "Nombre": "AddChibiExp 1nivels", "Cantidad": "1.0", "Precios": {"8MAN": "4000", "4MAN": "4000", "2MAN": "4000"}, "Notas": "", "IsVIP": false}, {"Id": 437, "Categorias": ["\u2728 Extras & Servicios"], "Comando": "/u108", "Nombre": "EXP player", "Cantidad": "1.0", "Precios": {"8MAN": "20000", "4MAN": "20000", "2MAN": "20000"}, "Notas": "", "IsVIP": false}, {"Id": 438, "Categorias": ["\u2728 Extras & Servicios"], "Comando": "/u109", "Nombre": "lootcrate", "Cantidad": "10.0", "Precios": {"8MAN": "10000", "4MAN": "10000", "2MAN": "10000"}, "Notas": "", "IsVIP": false}, {"Id": 439, "Categorias": ["\u2728 Extras & Servicios"], "Comando": "/u110", "Nombre": "Mision gen o gen2 completar", "Cantidad": "1.0", "Precios": {"8MAN": "20000", "4MAN": "20000", "2MAN": "20000"}, "Notas": "", "IsVIP": false}];
+    const rawServerTypes = ["1MAN", "2MAN", "3MAN", "4MAN", "8MAN", "PVE"];
+    const masterUniqueCategories = ["\u2728 Extras & Servicios", "\ud83c\udf31 Agricultura", "\ud83c\udfad Skins & Cosm\u00e9ticos", "\ud83c\udfc6 Artefactos & Bosses", "\ud83c\udfc7 Monturas", "\ud83d\udc51 Kits VIP", "\ud83d\udca3 Munici\u00f3n", "\ud83d\udd2b Armas", "\ud83d\udee1\ufe0f Armaduras", "\ud83d\udef8 Veh\u00edculos", "\ud83e\udd96 Dinosaurios", "\ud83e\uddea Consumibles", "\ud83e\uddf1 Estructuras", "\ud83e\udeb5 Recursos"];
+
+    // Bilingual Cross-Reference Index Mapping
+    const translationMap = {
+        "saddle": "montura", "kibble": "pienso", "meat": "carne", "wood": "madera",
+        "stone": "piedra", "metal": "metal", "foundation": "cimiento", "wall": "pared",
+        "ceiling": "techo", "door": "puerta", "doorframe": "marco", "arrow": "flecha",
+        "bullet": "bala", "dart": "dardo", "seed": "semilla", "suit": "traje",
+        "boots": "botas", "gloves": "guantes", "helmet": "casco", "pants": "pantalones",
+        "shield": "escudo", "sword": "espada", "bow": "arco", "gun": "pistola",
+        "rifle": "rifle", "fly": "vuelo", "water": "agua", "crop": "cultivo",
+        "bed": "cama", "turret": "torreta", "forge": "forja", "milk": "leche",
+        "honey": "miel", "sap": "savia", "hide": "piel", "pelt": "pelaje",
+        "crystal": "cristal", "obsidian": "obsidiana", "oil": "aceite", "paste": "cemento"
+    };
+
+    // Global Interactive State Engines
+    let currentSort = { column: null, direction: 'asc' };
+    let cart = [];
+    let favorites = [];
+
+    // System Cache Node Selectors
+    const tableBody = document.getElementById('tableBody');
+    const searchInput = document.getElementById('searchInput');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const serverFilter = document.getElementById('serverFilter');
+    const vipToggle = document.getElementById('vipToggle');
+    const favsToggle = document.getElementById('favsToggle');
+    const toast = document.getElementById('toast');
+    const itemCountSpan = document.getElementById('itemCount');
+    const resetBtn = document.getElementById('resetBtn');
+    
+    // Calculator Side Elements
+    const cartItemsList = document.getElementById('cartItemsList');
+    const cartTotalPoints = document.getElementById('cartTotalPoints');
+    const cartCountBadge = document.getElementById('cartCountBadge');
+    const fabCountBadge = document.getElementById('fabCountBadge');
+    const clearCartBtn = document.getElementById('clearCartBtn');
+    const shareSummaryBtn = document.getElementById('shareSummaryBtn');
+    const cartServerLabel = document.getElementById('cartServerLabel');
+    const cartSidebar = document.getElementById('cartSidebar');
+    const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+
+    // Debounce Processor Algorithm to optimize mobile search overhead
+    function debounce(func, timeout = 180) {
+        let timer;
+        return (...args) => {
+            clearTimeout(timer);
+            timer = setTimeout(() => { func.apply(this, args); }, timeout);
+        };
+    }
+
+    // System Startup Cache Sync Execution
+    function bootstrapApplication() {
+        // Load data from localStorage
+        const savedServer = localStorage.getItem('ark_saved_server');
+        const savedVip = localStorage.getItem('ark_saved_vip');
+        favorites = JSON.parse(localStorage.getItem('ark_saved_favs')) || [];
+        
+        rawServerTypes.forEach(server => {
+            const option = document.createElement('option');
+            option.value = server;
+            option.textContent = `Servidor: ${server}`;
+            if (savedServer ? (server === savedServer) : (server === 'PVE')) option.selected = true;
+            serverFilter.appendChild(option);
+        });
+
+        vipToggle.checked = savedVip !== null ? savedVip === 'true' : true;
+    }
+
+    // Reactive Dropdown updater hiding non available options dynamically
+    function refreshDropdownCategories() {
+        const selectedServer = serverFilter.value;
+        const showVIP = vipToggle.checked;
+        const showOnlyFavs = favsToggle.checked;
+        
+        const runtimeAvailableCats = new Set();
+        
+        arkData.forEach(item => {
+            if (item.IsVIP && !showVIP) return;
+            if (item.Precios[selectedServer] === undefined) return;
+            if (showOnlyFavs && !favorites.includes(item.Id)) return;
+            
+            item.Categorias.forEach(cat => runtimeAvailableCats.add(cat));
+        });
+        
+        const previousSelection = categoryFilter.value;
+        categoryFilter.innerHTML = '<option value="">Todas las Categorías</option>';
+        
+        Array.from(runtimeAvailableCats).sort().forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat;
+            option.textContent = cat;
+            if (cat === previousSelection) option.selected = true;
+            categoryFilter.appendChild(option);
+        });
+    }
+
+    function formatNumber(num) {
+        if (num === undefined || num === null) return "";
+        return parseInt(num).toLocaleString('es-CL');
+    }
+
+    function getCatClass(cat) {
+        let clean = cat.replace(/[^\w\s]/gi, '').trim().split(' ')[0].toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+        if (clean === 'skins') return 'cat-skins';
+        if (cat.includes('Agricultura')) return 'cat-agricultura';
+        return `cat-${clean}`;
+    }
+
+    // --- FAVORITES ENGINE CONTROLLER ---
+    window.toggleFavorite = function(itemId, buttonElement) {
+        const index = favorites.indexOf(itemId);
+        if (index > -1) {
+            favorites.splice(index, 1);
+            buttonElement.innerHTML = '☆';
+            buttonElement.classList.remove('is-fav');
+            triggerToast("Quitado de Favoritos ⭐");
+        } else {
+            favorites.push(itemId);
+            buttonElement.innerHTML = '★';
+            buttonElement.classList.add('is-fav');
+            triggerToast("¡Añadido a Favoritos! ⭐");
+        }
+        localStorage.setItem('ark_saved_favs', JSON.stringify(favorites));
+        
+        // If viewing favorites tab, hot-reload layout on favorited toggle change
+        if (favsToggle.checked) {
+            filterAndSortData();
+        }
+    };
+
+    // --- MOBILE SIDEBAR DRAWER OVERLAY ---
+    window.toggleMobileCart = function(open) {
+        if(open) {
+            cartSidebar.classList.add('open');
+            sidebarBackdrop.style.display = 'block';
+        } else {
+            cartSidebar.classList.remove('open');
+            sidebarBackdrop.style.display = 'none';
+        }
+    };
+
+    // --- QUANTITY CALCULATOR CONTROLS ---
+    function addToCart(itemId) {
+        const item = arkData.find(i => i.Id === itemId);
+        if (!item) return;
+
+        const existing = cart.find(c => c.itemId === itemId);
+        if (existing) {
+            existing.qty += 1;
+        } else {
+            cart.push({ itemId: itemId, qty: 1 });
+        }
+        
+        triggerToast(`Sumado: ${item.Nombre}`);
+        updateCartUI();
+    }
+
+    window.modifyCartQty = function(itemId, amount) {
+        const cartItem = cart.find(c => c.itemId === itemId);
+        if (!cartItem) return;
+
+        cartItem.qty += amount;
+        if (cartItem.qty <= 0) {
+            cart = cart.filter(c => c.itemId !== itemId);
+        }
+        updateCartUI();
+    };
+
+    function clearCart() {
+        cart = [];
+        updateCartUI();
+        triggerToast("Calculadora reseteada");
+    }
+
+    function updateCartUI() {
+        const activeServer = serverFilter.value;
+        cartServerLabel.textContent = activeServer;
+        cartItemsList.innerHTML = '';
+        
+        if (cart.length === 0) {
+            cartItemsList.innerHTML = `<div class="empty-state">La calculadora está vacía. Añade ítems con el botón +</div>`;
+            cartTotalPoints.textContent = '0';
+            cartCountBadge.textContent = '0';
+            fabCountBadge.textContent = '0';
+            clearCartBtn.style.display = 'none';
+            shareSummaryBtn.disabled = true;
+            return;
+        }
+
+        let totalPoints = 0;
+        let totalItemsCount = 0;
+        let listHtml = '';
+
+        cart.forEach(cartItem => {
+            const item = arkData.find(i => i.Id === cartItem.itemId);
+            const price = parseInt(item.Precios[activeServer] || 0); 
+            const rowTotal = price * cartItem.qty;
+            
+            totalPoints += rowTotal;
+            totalItemsCount += cartItem.qty;
+
+            const isVipClass = item.IsVIP ? 'is-vip' : '';
+
+            listHtml += `
+                <div class="cart-item">
+                    <div class="cart-item-header">
+                        <span class="cart-item-name">${item.Nombre}</span>
+                        <span class="cart-item-price">${formatNumber(rowTotal)} pts</span>
+                    </div>
+                    <div class="cart-item-controls-row">
+                        <button class="cart-cmd-btn ${isVipClass}" onclick="copyCommand('${item.Comando}', this)">
+                            📋 Copiar Código
+                        </button>
+                        <div class="cart-qty-controls">
+                            <button class="cart-qty-btn" onclick="modifyCartQty(${item.Id}, -1)">-</button>
+                            <span style="font-weight:600; font-size:0.85rem; min-width:18px; text-align:center;">${cartItem.qty}</span>
+                            <button class="cart-qty-btn" onclick="modifyCartQty(${item.Id}, 1)">+</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+
+        cartItemsList.innerHTML = listHtml;
+        cartTotalPoints.textContent = formatNumber(totalPoints);
+        cartCountBadge.textContent = totalItemsCount;
+        fabCountBadge.textContent = totalItemsCount;
+        clearCartBtn.style.display = 'block';
+        shareSummaryBtn.disabled = false;
+    }
+
+    // Copy formatted summary for external apps (Discord/WhatsApp)
+    function copyCartSummaryText() {
+        if (cart.length === 0) return;
+        const activeServer = serverFilter.value;
+        
+        let summary = `📋 *RESUMEN DE COMPRA - ARK DOMINIO*\n`;
+        summary += `🌐 Servidor: ${activeServer}\n`;
+        summary += `-----------------------------------------\n`;
+        
+        let total = 0;
+        cart.forEach(c => {
+            const item = arkData.find(i => i.Id === c.itemId);
+            const subtotal = parseInt(item.Precios[activeServer] || 0) * c.qty;
+            total += subtotal;
+            summary += `• ${c.qty}x ${item.Nombre} [${formatNumber(subtotal)} pts]\n`;
+        });
+        
+        summary += `-----------------------------------------\n`;
+        summary += `💰 *TOTAL CALCULADO:* ${formatNumber(total)} pts`;
+
+        navigator.clipboard.writeText(summary).then(() => {
+            triggerToast("¡Resumen copiado para Discord/WhatsApp! 🚀");
+        });
+    }
+
+    window.copyCommand = function(cmd, element) {
+        navigator.clipboard.writeText(cmd).then(() => {
+            const oldText = element.innerHTML;
+            element.innerHTML = "¡Copiado!";
+            element.style.background = "var(--success)";
+            element.style.color = "white";
+            element.style.borderColor = "var(--success)";
+            
+            setTimeout(() => {
+                element.innerHTML = oldText;
+                element.style = ""; 
+            }, 1200);
+        });
+    };
+
+    function triggerToast(message) {
+        toast.textContent = message;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 1800);
+    }
+
+    // --- CORE RENDERING ENGINE PIPELINE ---
+    function renderTable(data, currentServer) {
+        tableBody.innerHTML = '';
+        
+        if (data.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="6" class="empty-state">No se encontraron resultados para tu búsqueda actual.</td></tr>`;
+            return;
+        }
+
+        let html = '';
+        data.forEach((item) => {
+            const price = item.Precios[currentServer];
+            const isFav = favorites.includes(item.Id);
+            
+            let catHtml = '<div class="category-container">';
+            item.Categorias.forEach(cat => {
+                catHtml += `<span class="cat-badge ${getCatClass(cat)}">${cat}</span>`;
+            });
+            catHtml += '</div>';
+
+            const vipTag = item.IsVIP ? `<span class="vip-tag">VIP</span>` : '';
+            const rowClass = item.IsVIP ? 'row-vip' : '';
+            const cmdClass = item.IsVIP ? 'cmd-badge is-vip-cmd' : 'cmd-badge';
+            
+            const starChar = isFav ? '★' : '☆';
+            const starClass = isFav ? 'btn-fav-star is-fav' : 'btn-fav-star';
+
+            html += `
+                <tr class="${rowClass}">
+                    <td>${catHtml}</td>
+                    <td>
+                        <span class="${cmdClass}" onclick="copyCommand('${item.Comando}', this)">
+                            ${item.Comando}
+                        </span>
+                    </td>
+                    <td style="font-weight: 500;" data-qty="x${item.Cantidad}">
+                        ${item.Nombre} ${vipTag}
+                    </td>
+                    <td style="font-weight: 600; color: var(--text-secondary); font-size: 0.85rem;">x${item.Cantidad}</td>
+                    <td><span class="price">${formatNumber(price)}</span></td>
+                    <td>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <button class="add-cart-btn" onclick="addToCart(${item.Id})">+</button>
+                            <div class="mobile-fav-anchor">
+                                <button class="${starClass}" onclick="toggleFavorite(${item.Id}, this)">${starChar}</button>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+        
+        tableBody.innerHTML = html;
+        
+        // Soft trigger app fade re-render animation safely
+        tableBody.classList.remove('app-fade-in');
+        void tableBody.offsetWidth; // Trigger reflow
+        tableBody.classList.add('app-fade-in');
+    }
+
+    function getExpandedSearchTerms(searchTerm) {
+        let terms = [searchTerm];
+        const words = searchTerm.split(' ');
+        words.forEach(word => {
+            if (translationMap[word]) terms.push(translationMap[word]);
+        });
+        return terms;
+    }
+
+    function filterAndSortData() {
+        const rawSearch = searchInput.value.toLowerCase().trim();
+        const selectedCategory = categoryFilter.value;
+        const selectedServer = serverFilter.value;
+        const showVIP = vipToggle.checked;
+        const showOnlyFavs = favsToggle.checked;
+
+        clearSearchBtn.style.display = rawSearch ? 'block' : 'none';
+
+        localStorage.setItem('ark_saved_server', selectedServer);
+        localStorage.setItem('ark_saved_vip', showVIP);
+
+        const searchTerms = getExpandedSearchTerms(rawSearch);
+
+        let processedData = arkData.filter(item => {
+            // 1. VIP Filter Condition
+            if (item.IsVIP && !showVIP) return false;
+            
+            // 2. Favorites Filter Condition
+            if (showOnlyFavs && !favorites.includes(item.Id)) return false;
+
+            // 3. Server Bound Cost Check
+            if (item.Precios[selectedServer] === undefined) return false;
+
+            // 4. Word Token Search Condition
+            const itemText = (item.Nombre + " " + item.Comando).toLowerCase();
+            const matchesSearch = rawSearch === "" || searchTerms.some(term => itemText.includes(term));
+            if (!matchesSearch) return false;
+
+            // 5. Taxonomy Category Condition
+            const matchesCategory = selectedCategory === "" || item.Categorias.includes(selectedCategory);
+            if (!matchesCategory) return false;
+
+            return true;
+        });
+
+        // Apply Sorting Matrix
+        if (currentSort.column === 'nombre') {
+            processedData.sort((a, b) => {
+                return currentSort.direction === 'asc' ? a.Nombre.localeCompare(b.Nombre) : b.Nombre.localeCompare(a.Nombre);
+            });
+        } else if (currentSort.column === 'precio') {
+            processedData.sort((a, b) => {
+                const priceA = parseInt(a.Precios[selectedServer] || 0);
+                const priceB = parseInt(b.Precios[selectedServer] || 0);
+                return currentSort.direction === 'asc' ? priceA - priceB : priceB - priceA;
+            });
+        }
+
+        itemCountSpan.textContent = processedData.length;
+        renderTable(processedData, selectedServer);
+    }
+
+    function handleSortClick(column, thElement) {
+        document.querySelectorAll('th.sort-trigger').forEach(th => th.classList.remove('sort-active'));
+        
+        if (currentSort.column === column) {
+            currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+        } else {
+            currentSort.column = column;
+            currentSort.direction = 'asc';
+        }
+        
+        thElement.classList.add('sort-active');
+        filterAndSortData();
+    }
+
+    function resetAllFilters() {
+        searchInput.value = '';
+        categoryFilter.value = '';
+        favsToggle.checked = false;
+        refreshDropdownCategories();
+        filterAndSortData();
+        triggerToast("Filtros limpiados");
+    }
+
+    // --- PERFORMANCE DEBOUNCED TRIGGER BINDINGS ---
+    searchInput.addEventListener('input', debounce(filterAndSortData, 180));
+    
+    categoryFilter.addEventListener('change', filterAndSortData);
+    
+    serverFilter.addEventListener('change', () => {
+        refreshDropdownCategories();
+        filterAndSortData();
+        updateCartUI(); 
+    });
+    
+    vipToggle.addEventListener('change', () => {
+        refreshDropdownCategories();
+        filterAndSortData();
+    });
+
+    favsToggle.addEventListener('change', () => {
+        refreshDropdownCategories();
+        filterAndSortData();
+    });
+    
+    clearSearchBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        filterAndSortData();
+    });
+
+    resetBtn.addEventListener('click', resetAllFilters);
+
+    document.getElementById('thNombre').addEventListener('click', function() { handleSortClick('nombre', this); });
+    document.getElementById('thPrecio').addEventListener('click', function() { handleSortClick('precio', this); });
+    
+    clearCartBtn.addEventListener('click', clearCart);
+    shareSummaryBtn.addEventListener('click', copyCartSummaryText);
+
+    // Boot execution
+    bootstrapApplication();
+    refreshDropdownCategories();
+    filterAndSortData();
+    updateCartUI();
+
+</script>
+
+</body>
+</html>
